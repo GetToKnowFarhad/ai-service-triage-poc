@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request confirmation - AI Service Triage PoC</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+</head>
+<body>
+    <main>
+        <h1>Request received</h1>
+        <h2>Ticket title</h2>
+        <p class="submitted-text">{{ title }}</p>
+        <h2>Ticket description</h2>
+        <p class="submitted-text">{{ description }}</p>
+        <p>This request has not been saved.</p>
+        <a href="{{ url_for('homepage') }}">Back to the form</a>
+    </main>
+</body>
+</html>

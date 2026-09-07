@@ -10,6 +10,19 @@
     <main>
         <h1>AI Service Triage PoC</h1>
         <p>System Status: Running.</p>
+        <h2>Submit an IT service request</h2>
+        {% if error %}
+        <p class="error" role="alert">{{ error }}</p>
+        {% endif %}
+        <form action="{{ url_for('submit_ticket') }}" method="post">
+            <label for="title">Ticket title</label>
+            <input type="text" id="title" name="title" value="{{ title | default('') }}" required>
+
+            <label for="description">Ticket description</label>
+            <textarea id="description" name="description" rows="6" required>{{ description | default('') }}</textarea>
+
+            <button type="submit">Submit request</button>
+        </form>
     </main>
 </body>
 </html>
