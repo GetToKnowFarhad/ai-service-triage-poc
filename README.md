@@ -3,7 +3,9 @@
 A minimal, server-rendered FastAPI application. The homepage displays
 "AI Service Triage PoC" and "System Status: Running." It also has a form for
 submitting a ticket title and description. Valid submissions are saved in a
-local SQLite database and can be viewed later.
+local SQLite database and can be viewed later. Each ticket can receive a mock
+recommendation, followed by an analyst's approval or changes. The original
+recommendation and final decision are stored separately.
 
 ## Run locally
 
@@ -27,6 +29,7 @@ app/
     __init__.py
     main.py
     database.py
+    mock_assessment.py
     templates/
         index.html
         confirmation.html
@@ -34,6 +37,8 @@ app/
         ticket_detail.html
     static/
         style.css
+tests/
+    test_workflow.py
 requirements.txt
 tickets.db                 # Created automatically on server startup
 .gitignore
@@ -41,17 +46,19 @@ README.md
 ```
 
 - `app/__init__.py`: Marks `app` as a Python package. It is intentionally empty.
-- `app/main.py`: Initializes the database on startup and handles the homepage, submission, ticket list, and ticket detail routes. Validates input and calls the database module before showing confirmation.
-- `app/database.py`: Keeps SQLite connections, table creation, inserts, and queries separate from the routes. Commits saved tickets and closes each connection after use.
+- `app/main.py`: Initializes the database and handles page and form routes. Calls the mock service when analyzing a ticket, validates reviews, and redirects back to the detail page after analysis or review.
+- `app/database.py`: Keeps all SQLite logic separate from routes. Creates the three tables and saves and reads tickets, original assessments, and final reviews. Enables foreign keys on each connection, commits writes, and closes connections after use.
+- `app/mock_assessment.py`: A deterministic service with category and priority choices, keyword rules, team mappings, and a short summary. It has no model, network calls, or randomness.
 - `app/templates/index.html`: The homepage and required ticket form, with a link to the saved tickets. Validation errors retain the entered values.
 - `app/templates/confirmation.html`: Displays the generated ticket ID, title, and description after the ticket is saved, with links to the saved ticket and list.
 - `app/templates/tickets.html`: Lists saved ticket IDs, linked titles, and UTC creation times, newest first. Shows a message when no tickets exist.
-- `app/templates/ticket_detail.html`: Displays an individual ticket's ID, title, description, and UTC creation time. Jinja2 escapes submitted values on all pages so input appears as text.
-- `app/static/style.css`: Basic styling for the pages, form controls, and validation message. Preserves line breaks in the submitted description.
+- `app/templates/ticket_detail.html`: Displays the ticket, Analyze ticket action, original mock recommendation, review forms, and saved final human decision. Jinja2 escapes submitted values on all pages so input appears as text.
+- `app/static/style.css`: Styles pages and form controls, including review dropdowns and sections. Preserves line breaks in submitted text.
+- `tests/test_workflow.py`: Standard-library tests for deterministic rules, validation, approval, modification, persistence, and preserving original records. Uses an isolated test database and sends requests directly to the application without starting a server.
 - `requirements.txt`: Lists FastAPI for the application, Uvicorn to run the server, Jinja2 to render HTML templates, and `python-multipart`, which FastAPI requires to parse form data.
-- `tickets.db`: The local database, generated automatically; stores tickets between server restarts.
+- `tickets.db`: The local database, generated automatically; stores tickets, assessments, and reviews between server restarts.
 - `.gitignore`: Keeps the virtual environment, Python caches, and local database files out of Git.
-- `README.md`: Setup instructions, file explanations, database details, and route descriptions.
+- `README.md`: Setup instructions, file explanations, database details, workflow and rule descriptions, routes, and test instructions.
 
 When you visit `/`, FastAPI renders the template into HTML. Your browser then
 loads the CSS from `/static/style.css`. No JavaScript is needed.
@@ -71,11 +78,12 @@ SQLite is included with Python through the `sqlite3` standard-library module;
 no new dependency or separate database server is needed.
 
 On startup, the application creates `tickets.db` in the project folder and
-creates the `tickets` table if it does not already exist. Existing tickets are
-kept. The database path is based on `database.py`, not the terminal's current
-directory.
+creates any missing tables. Restarting an existing installation adds
+`ai_assessments` and `human_reviews` without replacing the `tickets` table or
+its data. The database path is based on `database.py`, not the terminal's
+current directory.
 
-The table contains only these fields:
+The `tickets` table contains these fields:
 
 | Column | SQLite type | Purpose |
 | --- | --- | --- |
@@ -84,10 +92,91 @@ The table contains only these fields:
 | `description` | TEXT NOT NULL | Ticket description |
 | `created_at` | TEXT NOT NULL | UTC timestamp generated by SQLite, in `YYYY-MM-DD HH:MM:SS` format |
 
+The `ai_assessments` table stores `id`, `ticket_id`, `category`, `priority`,
+`summary`, `recommended_team`, `requires_human_review` (0 or 1), and
+`created_at`. Its unique `ticket_id` links to the ticket and allows one original
+assessment per ticket.
+
+The `human_reviews` table stores `id`, `assessment_id`, `decision` (`approved`
+or `modified`), final `category`, final `priority`, final `team`, and
+`created_at`. Its unique `assessment_id` links the final decision to the exact
+original recommendation. A ticket is found through that assessment's
+`ticket_id`; ticket text is not copied into the review.
+
+Both new tables restrict categories and priorities to the allowed values with
+SQLite `CHECK` constraints. Foreign keys prevent orphaned records. All three
+tables use SQLite-generated UTC timestamps.
+
+Assessment and review writes only insert records. A repeated analysis keeps
+the original assessment, and a repeated review keeps the first final decision.
+There is no replacement, edit-after-review, or re-analysis history in this stage.
+
 Inserts and ID lookups use `?` placeholders with separate parameter values.
 User input is never interpolated into SQL. Tickets are ordered by creation
 time descending, then ID descending to put the newest ID first when timestamps
 match within the same second.
+
+## Mock assessment and human review
+
+1. Submit a ticket and open its detail page.
+2. Select **Analyze ticket**. The service applies keyword rules to the title
+   and description and stores the original result in `ai_assessments`.
+3. Read the category, priority, summary, recommended team, and human-review flag.
+4. Select **Approve unchanged**, or change category, priority, and/or team and
+   select **Save final decision**. The edit form starts with the recommendation.
+5. The page displays both the original recommendation and final human decision.
+
+Every mock recommendation has `requires_human_review = True`. This original
+flag stays unchanged after review; the final decision section shows that review
+is complete. No recommendation is automatically accepted.
+
+Approval copies the stored original values on the server. Edited reviews must
+use one of the listed categories and priorities and a nonblank team. Invalid
+reviews show an error and retain entered values without saving. Saving the edit
+form without changes counts as approval. A final decision cannot be saved
+before analysis.
+
+The same input always produces the same result. Matching is case-insensitive
+and uses simple substring checks. The first matching category below wins:
+
+| Category (match order) | Keywords | Recommended team |
+| --- | --- | --- |
+| Security | phishing, malware, ransomware, breach, suspicious | IT Security |
+| Account Access | password, login, log in, account, locked out, mfa | Identity and Access |
+| Network | network, wifi, wi-fi, internet, vpn, connection | Network Support |
+| Hardware | laptop, printer, monitor, keyboard, mouse, hardware | Hardware Support |
+| Software | software, application, app, install, crash, license | Software Support |
+| Other | No category keyword matched | Service Desk |
+
+Priority rules run in this order:
+
+- **Critical:** Broad impact (such as all users, multiple services, widespread,
+  or business-wide) together with an interruption or severe incident (such as
+  outage, unavailable, cannot connect, ransomware, or breach). Neither "outage"
+  nor "all users" alone makes a ticket Critical.
+- **High:** Security category, explicitly blocked work (such as "cannot work"
+  or "cannot complete"), or a business context (client, customer, meeting,
+  deadline, presentation, payroll, or production) with urgency. Urgency includes
+  "in N minutes/hours", "urgent" (except "not urgent"), "asap", "due today",
+  "deadline today", "meeting today", or "time-sensitive".
+- **Low:** Minimal-impact wording (cosmetic, how to, minor), or a planned/requested
+  installation, upgrade, or license with deferral (for later, next week/month,
+  when convenient, no rush, not urgent, no urgency). This applies only without
+  disruption or urgency, and never overrides Critical or High.
+- **Medium:** Default for an ordinary single-user issue without a matching
+  major impact or time-sensitive interruption. "Broken", "cannot", and
+  "locked out" alone do not establish High priority.
+
+For example, "My laptop keeps losing Wi-Fi and I have a client meeting in
+20 minutes" produces **Network / High**. A planned software request for later
+produces **Software / Low**. A VPN outage affecting all users is **Network /
+Critical**. A ransomware report on one isolated laptop is **Security / High**;
+an incident affecting multiple services is **Security / Critical**.
+
+The summary is the title and description combined, whitespace normalized, and
+shortened to at most 240 characters. These rules do not understand context or
+negation; they are for exercising the workflow. The detail page labels the
+recommendation as mock.
 
 ## Routes
 
@@ -97,8 +186,26 @@ match within the same second.
 | POST | `/submit` | Validate and save a ticket, then display confirmation |
 | GET | `/tickets` | List saved tickets, newest first |
 | GET | `/tickets/{ticket_id}` | Display one saved ticket; return HTTP 404 if it does not exist |
+| POST | `/tickets/{ticket_id}/analyze` | Save the mock assessment once and redirect to ticket details |
+| POST | `/tickets/{ticket_id}/review` | Validate and save the final human decision once and redirect to ticket details |
 
 For example, `/tickets/1` displays ticket 1 if it exists.
 
-This version has no AI, authentication, Docker, PostgreSQL, React, or external
-service integrations.
+The new POST routes receive HTML forms; no JSON API was added. They also return
+HTTP 404 for unknown tickets. Successful actions redirect with HTTP 303 so
+refreshing the detail page does not resubmit the action.
+
+## Tests
+
+From the project folder, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Tests create and remove their own database files beside `tickets.db`; they do
+not change your saved tickets. No additional test dependencies are required.
+
+This stage adds no dependencies. It uses FastAPI, Jinja2, HTML/CSS, SQLite,
+and the existing Uvicorn and form-parsing dependencies. There is no real AI,
+Ollama, authentication, Docker, PostgreSQL, cloud service, or external API.
