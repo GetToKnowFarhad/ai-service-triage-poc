@@ -2,8 +2,7 @@
 
 import re
 
-CATEGORIES = ("Network", "Hardware", "Software", "Account Access", "Security", "Other")
-PRIORITIES = ("Low", "Medium", "High", "Critical")
+from app.assessment_schema import AIAssessment
 
 # The first matching category wins, so security rules come first.
 CATEGORY_RULES = (
@@ -73,7 +72,7 @@ def _assess_priority(text: str, category: str) -> str:
     return "Medium"
 
 
-def assess_ticket(title: str, description: str) -> dict:
+def assess_ticket(title: str, description: str) -> AIAssessment:
     text = " ".join(f"{title} {description}".lower().replace("’", "'").split())
     category = "Other"
     for candidate, keywords in CATEGORY_RULES:
@@ -88,10 +87,10 @@ def assess_ticket(title: str, description: str) -> dict:
     if len(summary) > 240:
         summary = summary[:237] + "..."
 
-    return {
-        "category": category,
-        "priority": priority,
-        "summary": summary,
-        "recommended_team": TEAMS[category],
-        "requires_human_review": True,
-    }
+    return AIAssessment(
+        category=category,
+        priority=priority,
+        summary=summary,
+        recommended_team=TEAMS[category],
+        requires_human_review=True,
+    )

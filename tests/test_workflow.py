@@ -4,7 +4,8 @@ from uuid import uuid4
 
 from app import database
 from app.main import app
-from app.mock_assessment import CATEGORIES, PRIORITIES, assess_ticket
+from app.assessment_schema import AIAssessment, CATEGORIES, PRIORITIES
+from app.mock_assessment import assess_ticket
 
 
 class MockAssessmentTests(unittest.TestCase):
@@ -20,19 +21,20 @@ class MockAssessmentTests(unittest.TestCase):
         for title, category, priority in examples:
             with self.subTest(title=title):
                 result = assess_ticket(title, "Please help")
+                self.assertIsInstance(result, AIAssessment)
                 self.assertEqual(result, assess_ticket(title, "Please help"))
-                self.assertEqual(result["category"], category)
-                self.assertEqual(result["priority"], priority)
-                self.assertTrue(result["requires_human_review"])
-                self.assertTrue(result["recommended_team"])
+                self.assertEqual(result.category, category)
+                self.assertEqual(result.priority, priority)
+                self.assertTrue(result.requires_human_review)
+                self.assertTrue(result.recommended_team)
 
     def test_precedence_and_summary(self):
         result = assess_ticket("RANSOMWARE on laptop with VPN", "word\n" * 100)
-        self.assertEqual(result["category"], "Security")
-        self.assertEqual(result["priority"], "High")
-        self.assertLessEqual(len(result["summary"]), 240)
-        self.assertNotIn("\n", result["summary"])
-        self.assertEqual(assess_ticket("Help", "Please advise")["priority"], "Medium")
+        self.assertEqual(result.category, "Security")
+        self.assertEqual(result.priority, "High")
+        self.assertLessEqual(len(result.summary), 240)
+        self.assertNotIn("\n", result.summary)
+        self.assertEqual(assess_ticket("Help", "Please advise").priority, "Medium")
 
     def test_client_meeting_example_is_network_high(self):
         sentence = "My laptop keeps losing Wi-Fi and I have a client meeting in 20 minutes"
@@ -44,7 +46,7 @@ class MockAssessmentTests(unittest.TestCase):
         ):
             with self.subTest(title=title, description=description):
                 result = assess_ticket(title, description)
-                self.assertEqual((result["category"], result["priority"]), ("Network", "High"))
+                self.assertEqual((result.category, result.priority), ("Network", "High"))
                 self.assertEqual(result, assess_ticket(title, description))
 
     def test_priorities_follow_business_impact(self):
@@ -70,7 +72,7 @@ class MockAssessmentTests(unittest.TestCase):
         )
         for title, description, expected in examples:
             with self.subTest(title=title):
-                self.assertEqual(assess_ticket(title, description)["priority"], expected)
+                self.assertEqual(assess_ticket(title, description).priority, expected)
 
     def test_higher_impact_overrides_low_priority_signals(self):
         examples = (
@@ -81,7 +83,7 @@ class MockAssessmentTests(unittest.TestCase):
         )
         for title, description, expected in examples:
             with self.subTest(title=title):
-                self.assertEqual(assess_ticket(title, description)["priority"], expected)
+                self.assertEqual(assess_ticket(title, description).priority, expected)
 
 
 class WorkflowTests(unittest.IsolatedAsyncioTestCase):

@@ -29,6 +29,8 @@ app/
     __init__.py
     main.py
     database.py
+    assessment_schema.py
+    ai_service.py
     mock_assessment.py
     templates/
         index.html
@@ -38,6 +40,7 @@ app/
     static/
         style.css
 tests/
+    test_assessment.py
     test_workflow.py
 requirements.txt
 tickets.db                 # Created automatically on server startup
@@ -46,19 +49,22 @@ README.md
 ```
 
 - `app/__init__.py`: Marks `app` as a Python package. It is intentionally empty.
-- `app/main.py`: Initializes the database and handles page and form routes. Calls the mock service when analyzing a ticket, validates reviews, and redirects back to the detail page after analysis or review.
-- `app/database.py`: Keeps all SQLite logic separate from routes. Creates the three tables and saves and reads tickets, original assessments, and final reviews. Enables foreign keys on each connection, commits writes, and closes connections after use.
-- `app/mock_assessment.py`: A deterministic service with category and priority choices, keyword rules, team mappings, and a short summary. It has no model, network calls, or randomness.
+- `app/main.py`: Initializes the database and handles page and form routes. Imports the assessment function from `ai_service` and review choices from `assessment_schema`; route behavior is unchanged.
+- `app/database.py`: Keeps all SQLite logic separate from routes. Accepts an `AIAssessment` when saving a recommendation and reads its attributes into the existing parameterized insert. Table definitions and review storage are unchanged.
+- `app/assessment_schema.py`: Defines the validated `AIAssessment` contract and the shared allowed category and priority choices.
+- `app/ai_service.py`: Provides the application-facing `assess_ticket(title, description)` function. Calls the active mock provider and validates its result against the contract.
+- `app/mock_assessment.py`: The deterministic provider, with the existing keyword rules, team mappings, and summary logic. Now returns an `AIAssessment` instead of a dictionary. It has no language model, network calls, or randomness.
 - `app/templates/index.html`: The homepage and required ticket form, with a link to the saved tickets. Validation errors retain the entered values.
 - `app/templates/confirmation.html`: Displays the generated ticket ID, title, and description after the ticket is saved, with links to the saved ticket and list.
 - `app/templates/tickets.html`: Lists saved ticket IDs, linked titles, and UTC creation times, newest first. Shows a message when no tickets exist.
 - `app/templates/ticket_detail.html`: Displays the ticket, Analyze ticket action, original mock recommendation, review forms, and saved final human decision. Jinja2 escapes submitted values on all pages so input appears as text.
 - `app/static/style.css`: Styles pages and form controls, including review dropdowns and sections. Preserves line breaks in submitted text.
-- `tests/test_workflow.py`: Standard-library tests for deterministic rules, validation, approval, modification, persistence, and preserving original records. Uses an isolated test database and sends requests directly to the application without starting a server.
-- `requirements.txt`: Lists FastAPI for the application, Uvicorn to run the server, Jinja2 to render HTML templates, and `python-multipart`, which FastAPI requires to parse form data.
+- `tests/test_assessment.py`: Tests strict field validation, allowed values, missing/extra fields, the mock provider's return type, and the service interface's validation of provider output.
+- `tests/test_workflow.py`: Tests existing priority rules and the full workflow. Uses model attributes for mock results and checks their type; database rows still use column names. Uses an isolated test database and sends requests directly to the application without starting a server.
+- `requirements.txt`: Lists FastAPI, Uvicorn, Jinja2, `python-multipart`, and Pydantic 2. Pydantic is already installed through FastAPI; it is now declared directly because the application imports it for assessment validation.
 - `tickets.db`: The local database, generated automatically; stores tickets, assessments, and reviews between server restarts.
 - `.gitignore`: Keeps the virtual environment, Python caches, and local database files out of Git.
-- `README.md`: Setup instructions, file explanations, database details, workflow and rule descriptions, routes, and test instructions.
+- `README.md`: Setup instructions, file explanations, database details, the assessment contract and provider replacement guide, workflow rules, routes, and test instructions.
 
 When you visit `/`, FastAPI renders the template into HTML. Your browser then
 loads the CSS from `/static/style.css`. No JavaScript is needed.
@@ -115,6 +121,59 @@ Inserts and ID lookups use `?` placeholders with separate parameter values.
 User input is never interpolated into SQL. Tickets are ordered by creation
 time descending, then ID descending to put the newest ID first when timestamps
 match within the same second.
+
+## Assessment contract and service interface
+
+`app/assessment_schema.py` defines a Pydantic model named `AIAssessment` with
+exactly five required fields:
+
+| Field | Accepted value |
+| --- | --- |
+| `category` | Network, Hardware, Software, Account Access, Security, or Other |
+| `priority` | Low, Medium, High, or Critical |
+| `summary` | A nonblank string |
+| `recommended_team` | A nonblank string |
+| `requires_human_review` | A boolean (`True` or `False`) |
+
+Values are case-sensitive. Missing fields, unknown fields, invalid choices,
+blank text, and wrong types raise Pydantic `ValidationError`. For example,
+`"Urgent"` is not a priority, and `"true"` or `1` cannot replace a boolean.
+The model is frozen, so its fields cannot be reassigned after validation.
+Ticket IDs and timestamps belong to database records, not this contract.
+
+Application code calls the service rather than importing a provider directly:
+
+```python
+from app.ai_service import assess_ticket
+
+assessment = assess_ticket(
+    "My laptop keeps losing Wi-Fi",
+    "I have a client meeting in 20 minutes",
+)
+print(assessment.category)  # Network
+print(assessment.priority)  # High
+```
+
+The interface is `assess_ticket(title: str, description: str) -> AIAssessment`.
+The service currently calls `app/mock_assessment.py`. The mock builds the
+validated model, and the service validates the provider result before returning
+it. Invalid output is rejected before the route can save a recommendation.
+The database function accepts the model and writes its attributes into the
+existing columns. Saved records and templates continue to work as before.
+
+To replace the mock in a future stage:
+
+1. Implement a provider function with the same two inputs and `AIAssessment`
+   return type. Validate any parsed provider output with
+   `AIAssessment.model_validate(parsed_output)` before returning it.
+2. Change the provider import and call in `app/ai_service.py`. Routes keep
+   calling the same service function.
+3. Run the contract and workflow tests for that provider. Keep the mock for
+   deterministic tests; add provider-specific error handling when integrating
+   the real provider.
+
+No provider selection UI, real model connection, or external API is included.
+The existing mock rules and requirement for human review are unchanged.
 
 ## Mock assessment and human review
 
@@ -206,6 +265,7 @@ From the project folder, run:
 Tests create and remove their own database files beside `tickets.db`; they do
 not change your saved tickets. No additional test dependencies are required.
 
-This stage adds no dependencies. It uses FastAPI, Jinja2, HTML/CSS, SQLite,
-and the existing Uvicorn and form-parsing dependencies. There is no real AI,
+This stage uses Pydantic 2, already supplied by FastAPI, and declares it as a
+direct dependency. It otherwise uses the existing FastAPI, Jinja2, HTML/CSS,
+SQLite, Uvicorn, and form-parsing dependencies. There is no real AI,
 Ollama, authentication, Docker, PostgreSQL, cloud service, or external API.

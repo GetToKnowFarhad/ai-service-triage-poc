@@ -7,7 +7,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import database
-from app.mock_assessment import CATEGORIES, PRIORITIES, assess_ticket
+from app.ai_service import assess_ticket
+from app.assessment_schema import CATEGORIES, PRIORITIES
 
 # Resolve paths relative to this file so templates and CSS are easy to find.
 BASE_DIR = Path(__file__).resolve().parent

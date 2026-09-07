@@ -2,6 +2,8 @@ import sqlite3
 from contextlib import closing
 from pathlib import Path
 
+from app.assessment_schema import AIAssessment
+
 # Keep the database in the project folder, regardless of the working directory.
 DATABASE_PATH = Path(__file__).resolve().parent.parent / "tickets.db"
 
@@ -81,7 +83,7 @@ def get_ticket(ticket_id: int):
         ).fetchone()
 
 
-def save_assessment(ticket_id: int, assessment: dict):
+def save_assessment(ticket_id: int, assessment: AIAssessment):
     with closing(get_connection()) as connection:
         # A repeated click keeps the original assessment, even after review.
         connection.execute(
@@ -93,11 +95,11 @@ def save_assessment(ticket_id: int, assessment: dict):
             """,
             (
                 ticket_id,
-                assessment["category"],
-                assessment["priority"],
-                assessment["summary"],
-                assessment["recommended_team"],
-                assessment["requires_human_review"],
+                assessment.category,
+                assessment.priority,
+                assessment.summary,
+                assessment.recommended_team,
+                assessment.requires_human_review,
             ),
         )
         connection.commit()

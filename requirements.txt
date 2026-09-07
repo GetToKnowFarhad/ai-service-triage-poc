@@ -2,3 +2,4 @@ fastapi
 uvicorn
 jinja2
 python-multipart
+pydantic>=2,<3
