@@ -10,6 +10,7 @@
     <main>
         <h1>AI Service Triage PoC</h1>
         <p>System Status: Running.</p>
+        <p><a href="{{ url_for('tickets') }}">View submitted tickets</a></p>
         <h2>Submit an IT service request</h2>
         {% if error %}
         <p class="error" role="alert">{{ error }}</p>

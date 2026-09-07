@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket #{{ ticket.id }} - AI Service Triage PoC</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+</head>
+<body>
+    <main>
+        <h1>Ticket #{{ ticket.id }}</h1>
+        <p>Created: {{ ticket.created_at }} UTC</p>
+        <h2>Ticket title</h2>
+        <p class="submitted-text">{{ ticket.title }}</p>
+        <h2>Ticket description</h2>
+        <p class="submitted-text">{{ ticket.description }}</p>
+        <p><a href="{{ url_for('tickets') }}">Back to all tickets</a></p>
+        <a href="{{ url_for('homepage') }}">Submit a new request</a>
+    </main>
+</body>
+</html>

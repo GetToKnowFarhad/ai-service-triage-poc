@@ -9,11 +9,13 @@
 <body>
     <main>
         <h1>Request received</h1>
+        <p>Your request has been saved. Ticket ID: {{ ticket_id }}</p>
         <h2>Ticket title</h2>
         <p class="submitted-text">{{ title }}</p>
         <h2>Ticket description</h2>
         <p class="submitted-text">{{ description }}</p>
-        <p>This request has not been saved.</p>
+        <p><a href="{{ url_for('ticket_detail', ticket_id=ticket_id) }}">View ticket #{{ ticket_id }}</a></p>
+        <p><a href="{{ url_for('tickets') }}">View all tickets</a></p>
         <a href="{{ url_for('homepage') }}">Back to the form</a>
     </main>
 </body>

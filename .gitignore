@@ -1,3 +1,7 @@
 .venv/
 __pycache__/
 *.pyc
+tickets.db
+tickets.db-journal
+tickets.db-wal
+tickets.db-shm
