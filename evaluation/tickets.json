@@ -1,0 +1,62 @@
+[
+  {
+    "id": "T01",
+    "title": "Planned software request",
+    "description": "Please install a drawing application next month for a future internal project. No rush; current work is unaffected.",
+    "expected": {"category": "Software", "priority": "Low", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T02",
+    "title": "How to contact the service desk",
+    "description": "Where can I find general help hours? This is an informational question for future reference; no rush.",
+    "expected": {"category": "Other", "priority": "Low", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T03",
+    "title": "Printer problem at my desk",
+    "description": "My printer is broken, but I can use the spare printer. Only I am affected and my work can continue without delay.",
+    "expected": {"category": "Hardware", "priority": "Medium", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T04",
+    "title": "Password reset for an optional account",
+    "description": "I am locked out of my account for the optional learning portal. Only I am affected. There is no deadline and I can continue my normal work.",
+    "expected": {"category": "Account Access", "priority": "Medium", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T05",
+    "title": "Wi-Fi keeps dropping on my laptop",
+    "description": "Only my connection drops occasionally. A wired connection lets me keep working without interruption. No time-sensitive work is affected.",
+    "expected": {"category": "Network", "priority": "Medium", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T06",
+    "title": "My laptop keeps losing Wi-Fi",
+    "description": "I have a client meeting in 20 minutes and the repeated disconnections prevent me from joining reliably. No alternative connection is available.",
+    "expected": {"category": "Network", "priority": "High", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T07",
+    "title": "Reporting software crashes",
+    "description": "I cannot complete the customer report because the application crashes on export. It is due today and there is no workaround.",
+    "expected": {"category": "Software", "priority": "High", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T08",
+    "title": "Suspicious phishing email",
+    "description": "One user received a suspicious message asking for a password. They did not click it. Please review the possible security event promptly.",
+    "expected": {"category": "Security", "priority": "High", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T09",
+    "title": "Company-wide network outage",
+    "description": "All users in the entire company cannot connect to the network. Multiple services are unavailable and normal business operations have stopped.",
+    "expected": {"category": "Network", "priority": "Critical", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T10",
+    "title": "Ransomware affecting multiple services",
+    "description": "A confirmed ransomware incident has made multiple services unavailable across the entire company. Business operations are interrupted for all users.",
+    "expected": {"category": "Security", "priority": "Critical", "recommended_team": "IT Security"}
+  }
+]
