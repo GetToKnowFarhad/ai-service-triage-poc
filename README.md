@@ -3,9 +3,11 @@
 A minimal, server-rendered FastAPI application. The homepage displays
 "AI Service Triage PoC" and "System Status: Running." It also has a form for
 submitting a ticket title and description. Valid submissions are saved in a
-local SQLite database and can be viewed later. Each ticket can receive a mock
-recommendation, followed by an analyst's approval or changes. The original
-recommendation and final decision are stored separately.
+local SQLite database and can be viewed later. Each ticket can receive a
+recommendation from the deterministic mock or a local Ollama model, followed
+by an analyst's approval or changes. The original recommendation and final
+decision are stored separately. The mock remains the default, so local
+development and tests do not need Ollama.
 
 ## Run locally
 
@@ -22,6 +24,72 @@ The commands use the virtual environment's Python directly, so activating it
 is not required. The `--reload` option restarts the server when you edit Python
 files during development.
 
+## Run the application with Ollama on the Dell
+
+Run FastAPI and Ollama on the Dell itself: `localhost` refers to the computer
+running FastAPI. The application sends inference requests only to
+`http://localhost:11434/api/chat`. Qwen3 1.7B is the default model, provisionally
+selected from the Dell benchmark.
+
+Install Ollama if needed using its
+[official setup instructions](https://docs.ollama.com/quickstart). Start the
+Ollama application/service; if it is not already running, use `ollama serve`
+in a separate terminal. Prepare the model before starting the app:
+
+```text
+ollama pull qwen3:1.7b
+ollama list
+```
+
+Downloading the model requires internet access during setup. Inference runs
+locally. The application does not install Ollama, download models, or start
+the Ollama service automatically. Application requests bypass HTTP proxies
+and reject redirects, keeping ticket text at the configured fixed local endpoint.
+
+Configuration uses environment variables in the terminal that starts FastAPI:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `AI_PROVIDER` | `mock` | Select `mock` or `ollama` |
+| `OLLAMA_MODEL` | `qwen3:1.7b` | Name of the locally installed Ollama model |
+| `OLLAMA_TIMEOUT` | `120` | HTTP timeout in seconds; must be a positive, finite number |
+
+For PowerShell, after setting up the virtual environment above:
+
+```powershell
+$env:AI_PROVIDER = "ollama"
+$env:OLLAMA_MODEL = "qwen3:1.7b"
+$env:OLLAMA_TIMEOUT = "120"
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+For a Linux Dell, create its own virtual environment instead of copying a
+Windows `.venv`. From the project folder:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+export AI_PROVIDER=ollama
+export OLLAMA_MODEL=qwen3:1.7b
+export OLLAMA_TIMEOUT=120
+.venv/bin/python -m uvicorn app.main:app --reload
+```
+
+Open http://127.0.0.1:8000 on the Dell, submit a ticket, open its detail page,
+and select **Analyze ticket**. Review the result and approve or edit it as
+before. To return to offline development, stop FastAPI, set
+`$env:AI_PROVIDER = "mock"` in PowerShell or `export AI_PROVIDER=mock` on
+Linux, and restart the server. Restart after changing any environment setting.
+Omitting `AI_PROVIDER` also selects the mock.
+
+An unavailable Ollama service, a missing model, timeout, or invalid response
+shows an error on the ticket detail page. No assessment or human review is
+saved for that failed attempt, and **Analyze ticket** remains available to
+retry after resolving the problem. Failures never silently fall back to the
+mock. Connection/configuration errors return HTTP 503, timeouts return HTTP
+504, and Ollama HTTP errors or invalid output return HTTP 502. Raw model
+output and internal exception details are not shown on the page.
+
 ## Project files
 
 ```text
@@ -30,8 +98,13 @@ app/
     main.py
     database.py
     assessment_schema.py
+    assessment_errors.py
+    assessment_policy.py
+    assessment_policy.txt
     ai_service.py
+    config.py
     mock_assessment.py
+    ollama_provider.py
     templates/
         index.html
         confirmation.html
@@ -42,11 +115,12 @@ app/
 tests/
     test_assessment.py
     test_evaluation.py
+    test_ollama_provider.py
+    test_shared_policy.py
     test_workflow.py
 evaluation/
     __init__.py
     benchmark.py
-    policy.txt
     tickets.json
 requirements.txt
 tickets.db                 # Created automatically on server startup
@@ -55,27 +129,33 @@ README.md
 ```
 
 - `app/__init__.py`: Marks `app` as a Python package. It is intentionally empty.
-- `app/main.py`: Initializes the database and handles page and form routes. Imports the assessment function from `ai_service` and review choices from `assessment_schema`; route behavior is unchanged.
+- `app/main.py`: Initializes the database and handles page and form routes. Displays safe assessment errors on the detail page and skips the provider call when the ticket already has an original assessment. Existing review handling is preserved.
 - `app/database.py`: Keeps all SQLite logic separate from routes. Accepts an `AIAssessment` when saving a recommendation and reads its attributes into the existing parameterized insert. Table definitions and review storage are unchanged.
 - `app/assessment_schema.py`: Defines the validated `AIAssessment` contract and the shared allowed category and priority choices.
-- `app/ai_service.py`: Provides the application-facing `assess_ticket(title, description)` function. Calls the active mock provider and validates its result against the contract.
-- `app/mock_assessment.py`: The deterministic provider, with the existing keyword rules, team mappings, and summary logic. Now returns an `AIAssessment` instead of a dictionary. It has no language model, network calls, or randomness.
+- `app/assessment_errors.py`: Defines assessment failures with safe messages and HTTP status codes that routes can display without exposing raw responses.
+- `app/assessment_policy.py`: Builds the reusable system prompt from the business policy, existing category guidance, team mapping, and assessment JSON schema. Both the application provider and benchmark use this helper.
+- `app/assessment_policy.txt`: The benchmark's existing business policy, moved unchanged from `evaluation/policy.txt` so application and evaluation share the same rules. It contains no ticket-specific examples or expected answers.
+- `app/ai_service.py`: Provides `assess_ticket(title, description)`, selects the configured mock or Ollama provider, and validates its result against the contract. It never substitutes mock data after an Ollama failure.
+- `app/config.py`: Reads and validates provider, model, and timeout environment settings without adding a configuration package.
+- `app/mock_assessment.py`: The unchanged deterministic provider, with keyword rules, team mappings, and summary logic. Returns an `AIAssessment` without language models, network calls, or randomness.
+- `app/ollama_provider.py`: Calls the fixed local Ollama chat endpoint using Python's standard library, requests structured output, validates responses, and reports connection, timeout, HTTP, and output failures.
 - `app/templates/index.html`: The homepage and required ticket form, with a link to the saved tickets. Validation errors retain the entered values.
 - `app/templates/confirmation.html`: Displays the generated ticket ID, title, and description after the ticket is saved, with links to the saved ticket and list.
 - `app/templates/tickets.html`: Lists saved ticket IDs, linked titles, and UTC creation times, newest first. Shows a message when no tickets exist.
-- `app/templates/ticket_detail.html`: Displays the ticket, Analyze ticket action, original mock recommendation, review forms, and saved final human decision. Jinja2 escapes submitted values on all pages so input appears as text.
+- `app/templates/ticket_detail.html`: Displays the ticket, Analyze ticket action, original recommendation, review forms, saved final human decision, and assessment errors. The recommendation description now works for either provider. Jinja2 escapes submitted values so input appears as text.
 - `app/static/style.css`: Styles pages and form controls, including review dropdowns and sections. Preserves line breaks in submitted text.
-- `tests/test_assessment.py`: Tests strict field validation, allowed values, missing/extra fields, the mock provider's return type, and the service interface's validation of provider output.
+- `tests/test_assessment.py`: Tests the assessment contract, mock return type, and safe rejection of invalid provider output. Provider settings are isolated from the developer's environment.
 - `tests/test_evaluation.py`: Tests scoring, latency calculations, request settings, dataset coverage, error handling, and a complete CSV export with mocked HTTP responses; Ollama is not needed.
-- `tests/test_workflow.py`: Tests existing priority rules and the full workflow. Uses model attributes for mock results and checks their type; database rows still use column names. Uses an isolated test database and sends requests directly to the application without starting a server.
+- `tests/test_ollama_provider.py`: Tests Ollama request settings, validated responses, configuration, provider selection, and failures without mock fallback using mocked HTTP responses; no model or Ollama server is required.
+- `tests/test_shared_policy.py`: Checks that the shared prompt preserves benchmark behavior and that application and benchmark use the same policy.
+- `tests/test_workflow.py`: Tests priority rules and the full workflow with isolated environment settings and a temporary database. Also checks visible assessment failures, retry behavior, and preservation of saved recommendations and human decisions.
 - `evaluation/__init__.py`: Marks the standalone evaluation directory as a Python package so the benchmark can run with `python -m`.
-- `evaluation/benchmark.py`: Calls the local Ollama chat API, validates responses with the existing assessment contract, calculates results, prints summaries, and writes a CSV. It does not import routes, call the application service, or access SQLite.
-- `evaluation/policy.txt`: Shared, reusable business-priority instructions for both evaluated models. The script adds the existing category guidance, team mapping, and JSON schema. It contains no ticket-specific examples or expected answers.
+- `evaluation/benchmark.py`: Calls the local Ollama chat API, validates responses, calculates results, prints summaries, and writes a CSV. Only prompt construction now comes from the shared policy helper; benchmark requests, scoring, and output behavior are unchanged. It does not import routes, call the application service, or access SQLite.
 - `evaluation/tickets.json`: Ten hand-authored synthetic tickets with predefined category, priority, and team labels. The benchmark does not calculate these labels from model predictions or send them to the models.
 - `requirements.txt`: Lists FastAPI, Uvicorn, Jinja2, `python-multipart`, and Pydantic 2. Pydantic is already installed through FastAPI; it is now declared directly because the application imports it for assessment validation.
 - `tickets.db`: The local database, generated automatically; stores tickets, assessments, and reviews between server restarts.
 - `.gitignore`: Keeps the virtual environment, Python caches, and local database files out of Git.
-- `README.md`: Setup instructions, file explanations, database details, the assessment contract, workflow rules, routes, tests, and Dell benchmark instructions and measurement definitions.
+- `README.md`: Setup instructions, file explanations, database details, assessment contract, workflow rules, routes, offline tests, Dell application configuration, and benchmark instructions and measurement definitions.
 
 When you visit `/`, FastAPI renders the template into HTML. Your browser then
 loads the CSS from `/static/style.css`. No JavaScript is needed.
@@ -166,41 +246,55 @@ print(assessment.priority)  # High
 ```
 
 The interface is `assess_ticket(title: str, description: str) -> AIAssessment`.
-The service currently calls `app/mock_assessment.py`. The mock builds the
-validated model, and the service validates the provider result before returning
-it. Invalid output is rejected before the route can save a recommendation.
-The database function accepts the model and writes its attributes into the
-existing columns. Saved records and templates continue to work as before.
+The service selects `app/mock_assessment.py` by default, or
+`app/ollama_provider.py` when `AI_PROVIDER=ollama`. Both return the same
+validated model, and the service validates the result before returning it.
+Invalid output is rejected before the route can save or display a
+recommendation. The database function accepts the model and writes its
+attributes into the existing columns; no database migration is needed.
+The example above has the shown deterministic result with the default mock.
 
-To replace the mock in a future stage:
+The Ollama provider sends the same reusable system prompt used by the benchmark,
+with ticket title and description in a separate user message. It supplies
+`AIAssessment.model_json_schema()` as Ollama's structured-output `format`,
+uses `stream: false`, and sets `temperature: 0`, `seed: 0`, `num_ctx: 4096`,
+and `num_predict: 512`. It disables thinking for supported boolean-thinking
+model families, including Qwen3; it omits that setting for Gemma3. These
+requests use Ollama's [structured-output API](https://docs.ollama.com/capabilities/structured-outputs)
+and [thinking controls](https://docs.ollama.com/capabilities/thinking).
 
-1. Implement a provider function with the same two inputs and `AIAssessment`
-   return type. Validate any parsed provider output with
-   `AIAssessment.model_validate(parsed_output)` before returning it.
-2. Change the provider import and call in `app/ai_service.py`. Routes keep
-   calling the same service function.
-3. Run the contract and workflow tests for that provider. Keep the mock for
-   deterministic tests; add provider-specific error handling when integrating
-   the real provider.
+Returned content must be valid JSON and pass the existing strict Pydantic
+contract. The provider does not repair JSON, strip Markdown fences, or accept
+raw text as an assessment. It also rejects `requires_human_review: false`
+because this workflow requires an analyst's decision; the reusable schema's
+boolean field remains unchanged. Temperature zero controls sampling, but
+does not guarantee the same result across model, hardware, or software versions.
 
-The FastAPI application has no provider selection UI, real model connection,
-or external API integration. The standalone benchmark below calls local Ollama
-only when you run it explicitly. It does not replace the active mock provider
-or change the application's requirement for human review.
+New providers can implement the same two-input function and return a validated
+`AIAssessment`, then be added to the service's explicit provider selection.
+Routes continue to use the service function. Provider failures use the shared
+`AssessmentError` so the existing page can report them safely. The mock remains
+available for deterministic offline development and tests.
 
-## Mock assessment and human review
+## Assessment and human review
 
 1. Submit a ticket and open its detail page.
-2. Select **Analyze ticket**. The service applies keyword rules to the title
-   and description and stores the original result in `ai_assessments`.
+2. Select **Analyze ticket**. The service assesses the title and description
+   with the configured provider and stores the validated original result in
+   `ai_assessments`. A failure displays an error without saving a result.
 3. Read the category, priority, summary, recommended team, and human-review flag.
 4. Select **Approve unchanged**, or change category, priority, and/or team and
    select **Save final decision**. The edit form starts with the recommendation.
 5. The page displays both the original recommendation and final human decision.
 
-Every mock recommendation has `requires_human_review = True`. This original
-flag stays unchanged after review; the final decision section shows that review
-is complete. No recommendation is automatically accepted.
+Every saved recommendation in this workflow has `requires_human_review = True`.
+This original flag stays unchanged after review; the final decision section
+shows that review is complete. No recommendation is automatically accepted.
+Switching providers does not replace existing assessments. Selecting Analyze
+ticket again for an already assessed ticket keeps its original without calling
+the provider. Provider/model provenance is not stored in the current schema,
+so the page uses a neutral recommendation description for historical mock and
+new Ollama assessments.
 
 Approval copies the stored original values on the server. Edited reviews must
 use one of the listed categories and priorities and a nonblank team. Invalid
@@ -208,8 +302,11 @@ reviews show an error and retain entered values without saving. Saving the edit
 form without changes counts as approval. A final decision cannot be saved
 before analysis.
 
-The same input always produces the same result. Matching is case-insensitive
-and uses simple substring checks. The first matching category below wins:
+### Deterministic mock rules
+
+With the mock provider, the same input always produces the same result.
+Matching is case-insensitive and uses simple substring checks. The first
+matching category below wins:
 
 | Category (match order) | Keywords | Recommended team |
 | --- | --- | --- |
@@ -247,8 +344,8 @@ an incident affecting multiple services is **Security / Critical**.
 
 The summary is the title and description combined, whitespace normalized, and
 shortened to at most 240 characters. These rules do not understand context or
-negation; they are for exercising the workflow. The detail page labels the
-recommendation as mock.
+negation; they are for exercising the workflow. The Ollama provider instead
+uses the shared business policy described above.
 
 ## Routes
 
@@ -258,7 +355,7 @@ recommendation as mock.
 | POST | `/submit` | Validate and save a ticket, then display confirmation |
 | GET | `/tickets` | List saved tickets, newest first |
 | GET | `/tickets/{ticket_id}` | Display one saved ticket; return HTTP 404 if it does not exist |
-| POST | `/tickets/{ticket_id}/analyze` | Save the mock assessment once and redirect to ticket details |
+| POST | `/tickets/{ticket_id}/analyze` | Save the configured provider's validated assessment once and redirect to ticket details; display a useful error on failure |
 | POST | `/tickets/{ticket_id}/review` | Validate and save the final human decision once and redirect to ticket details |
 
 For example, `/tickets/1` displays ticket 1 if it exists.
@@ -345,11 +442,13 @@ Qwen3 requests set `think: false`; Gemma3 has no thinking mode, so that field is
 omitted. See Ollama's [thinking controls](https://docs.ollama.com/capabilities/thinking)
 and the [Gemma3 model page](https://ollama.com/library/gemma3:1b).
 
-`evaluation/policy.txt` expresses the project's business impact definitions,
+`app/assessment_policy.txt` expresses the project's business impact definitions,
 including the distinction between a single-user disruption and widespread
 interruption. It contains no Wi-Fi/client-meeting example. The existing
 category precedence and team names are imported from the mock module; expected
-answers stay in the dataset and are used only for scoring.
+answers stay in the dataset and are used only for scoring. The benchmark and
+application provider share the same prompt-building helper; moving the policy
+did not change its contents or the benchmark's requests and scoring.
 
 All tickets are invented and contain no real organizational/customer data:
 
@@ -384,7 +483,9 @@ valid structured-output rate, and average/median response latency for each model
   Ollama response for diagnosis. Summary wording and the human-review flag are
   available for inspection; their semantic correctness is not part of the
   three label-accuracy scores. The schema permits either boolean, while the
-  business policy asks for `requires_human_review: true`.
+  business policy asks for `requires_human_review: true`. Benchmark validation
+  remains unchanged; the application's Ollama provider additionally rejects a
+  false flag before saving so human review remains mandatory.
 - Latency uses the client's monotonic clock from sending the request through
   reading its full response, before local scoring. The CSV records elapsed time
   for failures too. The console average/median includes completed HTTP responses,
@@ -405,7 +506,8 @@ load. Record its CPU, RAM, GPU (if any), Ollama version, model IDs from
 with reversed model order to check loading/resource effects. Temperature zero
 reduces sampling variation but is not a guarantee of identical results across
 hardware or software versions. This 10-ticket set is an initial check, not a
-statistical ranking; expand the synthetic cases before choosing a provider.
+statistical ranking; expand the synthetic cases when reassessing the
+provisional Qwen3 selection.
 
 ## Tests
 
@@ -416,12 +518,15 @@ From the project folder, run:
 ```
 
 Workflow tests create and remove their own database files beside `tickets.db`;
-they do not change your saved tickets. Evaluation tests mock HTTP and clean up
-their temporary CSV files. No Ollama instance, model download, or additional
-test dependency is required.
+they do not change your saved tickets. Tests isolate provider configuration
+from your shell settings and mock Ollama HTTP responses. Evaluation tests
+clean up their temporary CSV files. No Ollama instance, model download, or
+additional test dependency is required.
 
 This stage uses Pydantic 2, already supplied by FastAPI, and declares it as a
 direct dependency. It otherwise uses the existing FastAPI, Jinja2, HTML/CSS,
-SQLite, Uvicorn, and form-parsing dependencies. Evaluation uses only the Python
-standard library and existing packages. The application still uses the mock;
-there is no authentication, Docker, PostgreSQL, or cloud-service integration.
+SQLite, Uvicorn, and form-parsing dependencies. Ollama integration and evaluation
+use only the Python standard library and existing packages; no Python
+dependencies were added for the provider. The application defaults to the mock
+and uses local Ollama only when configured. There is no authentication,
+Docker, PostgreSQL, or cloud-service integration.

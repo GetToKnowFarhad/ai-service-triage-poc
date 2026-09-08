@@ -19,8 +19,9 @@ from urllib.request import ProxyHandler, Request, build_opener
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
+from app.assessment_policy import build_system_prompt
 from app.assessment_schema import AIAssessment, Category, Priority
-from app.mock_assessment import CATEGORY_RULES, TEAMS
+from app.mock_assessment import TEAMS
 
 EVALUATION_DIR = Path(__file__).resolve().parent
 OLLAMA_URL = "http://localhost:11434/api/chat"
@@ -72,21 +73,6 @@ def load_dataset(path: Path) -> list[EvaluationTicket]:
         if ticket.expected.recommended_team != TEAMS[ticket.expected.category]:
             raise ValueError(f"Ticket {ticket.id}: expected team does not match the project mapping.")
     return tickets
-
-
-def build_system_prompt() -> str:
-    # The policy and schema are identical for every model and ticket.
-    policy = (EVALUATION_DIR / "policy.txt").read_text(encoding="utf-8")
-    guidance = "\n".join(
-        f"- {category}: {', '.join(keywords)}" for category, keywords in CATEGORY_RULES
-    )
-    return (
-        policy
-        + "\nCategory guidance in precedence order:\n" + guidance
-        + "\n- Other: none of the preceding categories fits.\n"
-        + "\nExact category-to-team mapping:\n" + json.dumps(TEAMS)
-        + "\nRequired JSON schema:\n" + json.dumps(AIAssessment.model_json_schema())
-    )
 
 
 def build_payload(model: str, ticket: EvaluationTicket, system_prompt: str) -> dict:

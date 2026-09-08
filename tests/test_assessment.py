@@ -1,9 +1,11 @@
+import os
 import unittest
 from unittest.mock import patch
 
 from pydantic import ValidationError
 
 from app import ai_service, mock_assessment
+from app.assessment_errors import AssessmentError
 from app.assessment_schema import AIAssessment, CATEGORIES, PRIORITIES
 
 
@@ -67,6 +69,11 @@ class AssessmentSchemaTests(unittest.TestCase):
 
 
 class AssessmentServiceTests(unittest.TestCase):
+    def setUp(self):
+        environment = patch.dict(os.environ, {"AI_PROVIDER": "mock"})
+        environment.start()
+        self.addCleanup(environment.stop)
+
     def test_mock_and_service_return_the_same_valid_schema(self):
         title = "My laptop keeps losing Wi-Fi"
         description = "I have a client meeting in 20 minutes"
@@ -90,7 +97,7 @@ class AssessmentServiceTests(unittest.TestCase):
         for field, value in (("category", "Invalid"), ("priority", "Urgent")):
             with self.subTest(field=field):
                 with patch("app.ai_service.mock_assessment.assess_ticket", return_value={**valid_data, field: value}):
-                    with self.assertRaises(ValidationError):
+                    with self.assertRaises(AssessmentError):
                         ai_service.assess_ticket("Title", "Description")
 
 

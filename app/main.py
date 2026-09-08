@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from app import database
 from app.ai_service import assess_ticket
+from app.assessment_errors import AssessmentError
 from app.assessment_schema import CATEGORIES, PRIORITIES
 
 # Resolve paths relative to this file so templates and CSS are easy to find.
@@ -106,9 +107,18 @@ def analyze_ticket(request: Request, ticket_id: int):
     if ticket is None:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
-    recommendation = assess_ticket(ticket["title"], ticket["description"])
+    detail_url = request.url_for("ticket_detail", ticket_id=ticket_id)
+    if database.get_assessment(ticket_id) is not None:
+        return RedirectResponse(detail_url, status_code=303)
+
+    try:
+        recommendation = assess_ticket(ticket["title"], ticket["description"])
+    except AssessmentError as error:
+        return render_ticket_detail(
+            request, ticket_id, error=f"{error} No recommendation was saved.", status_code=error.status_code
+        )
     database.save_assessment(ticket_id, recommendation)
-    return RedirectResponse(request.url_for("ticket_detail", ticket_id=ticket_id), status_code=303)
+    return RedirectResponse(detail_url, status_code=303)
 
 
 @app.post("/tickets/{ticket_id}/review")

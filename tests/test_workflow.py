@@ -1,4 +1,8 @@
+import json
+import os
 import unittest
+from unittest.mock import patch
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from uuid import uuid4
 
@@ -88,6 +92,9 @@ class MockAssessmentTests(unittest.TestCase):
 
 class WorkflowTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        environment = patch.dict(os.environ, {"AI_PROVIDER": "mock"})
+        environment.start()
+        self.addCleanup(environment.stop)
         self.original_path = database.DATABASE_PATH
         self.test_path = self.original_path.parent / f"test-tickets-{uuid4().hex}.db"
         database.DATABASE_PATH = self.test_path
@@ -153,7 +160,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(dict(database.get_assessment(self.ticket_id)), original)
         status, html = await self.request("GET", self.path)
         self.assertEqual(status, 200)
-        self.assertIn("AI recommendation (mock)", html)
+        self.assertIn("AI recommendation", html)
         self.assertIn("Final human decision", html)
         self.assertIn("Approved unchanged", html)
         self.assertNotIn("Save final decision", html)
@@ -233,6 +240,78 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             "priority": original["priority"], "team": original["recommended_team"],
         })
         self.assertEqual(database.get_review(original["id"])["decision"], "approved")
+
+    async def test_ollama_failures_show_errors_without_saving_or_fallback(self):
+        valid = assess_ticket("VPN outage", "All users cannot connect").model_dump()
+        invalid = {**valid, "category": "UNTRUSTED_RAW_OUTPUT"}
+        cases = (
+            (URLError("Connection refused"), 503),
+            (TimeoutError("Timed out"), 504),
+            (HTTPError("http://localhost:11434/api/chat", 404, "Missing model", {}, None), 502),
+            (json.dumps({"done": True, "message": {"content": json.dumps(invalid)}}).encode(), 502),
+            (json.dumps({"done": True, "message": {"content": json.dumps({**valid, "requires_human_review": False})}}).encode(), 502),
+        )
+        for response, expected_status in cases:
+            with self.subTest(response=type(response).__name__, status=expected_status):
+                with patch.dict(os.environ, {"AI_PROVIDER": "ollama", "OLLAMA_MODEL": "qwen3:1.7b", "OLLAMA_TIMEOUT": "1"}):
+                    with patch("app.ollama_provider.build_opener") as opener, patch("app.ai_service.mock_assessment.assess_ticket") as mock:
+                        if isinstance(response, Exception):
+                            opener.return_value.open.side_effect = response
+                        else:
+                            opener.return_value.open.return_value.__enter__.return_value.read.return_value = response
+                        status, html = await self.request("POST", self.path + "/analyze")
+                        mock.assert_not_called()
+                self.assertEqual(status, expected_status)
+                self.assertIn('role="alert"', html)
+                self.assertIn("No recommendation was saved.", html)
+                self.assertIn("Analyze ticket", html)
+                self.assertNotIn("UNTRUSTED_RAW_OUTPUT", html)
+                self.assertIsNone(database.get_assessment(self.ticket_id))
+
+    async def test_ollama_success_preserves_original_through_approval_or_override(self):
+        assessment = assess_ticket("VPN outage", "All users cannot connect")
+        response = json.dumps({"done": True, "message": {"content": assessment.model_dump_json()}}).encode()
+        for action in ("approve", "modify"):
+            with self.subTest(action=action):
+                ticket_id = database.create_ticket("VPN outage", "All users cannot connect")
+                path = f"/tickets/{ticket_id}"
+                with patch.dict(os.environ, {"AI_PROVIDER": "ollama", "OLLAMA_MODEL": "qwen3:1.7b", "OLLAMA_TIMEOUT": "1"}):
+                    with patch("app.ollama_provider.build_opener") as opener:
+                        opener.return_value.open.return_value.__enter__.return_value.read.return_value = response
+                        status, _ = await self.request("POST", path + "/analyze")
+                self.assertEqual(status, 303)
+                original = dict(database.get_assessment(ticket_id))
+                self.assertEqual(original["summary"], assessment.summary)
+                self.assertEqual(original["recommended_team"], assessment.recommended_team)
+                status, _ = await self.request("POST", path + "/review", {
+                    "action": action, "category": "Hardware", "priority": "Low", "team": "Chosen team",
+                })
+                self.assertEqual(status, 303)
+                review = dict(database.get_review(original["id"]))
+                expected = (("approved", "Network", "Critical", "Network Support") if action == "approve"
+                            else ("modified", "Hardware", "Low", "Chosen team"))
+                self.assertEqual((review["decision"], review["category"], review["priority"], review["team"]), expected)
+                self.assertEqual(dict(database.get_assessment(ticket_id)), original)
+                status, html = await self.request("GET", path)
+                self.assertEqual(status, 200)
+                self.assertIn("AI recommendation", html)
+                self.assertIn("Final human decision", html)
+                self.assertNotIn("No language model is connected", html)
+                # A later provider failure or configuration change cannot replace saved evidence.
+                with patch.dict(os.environ, {"AI_PROVIDER": "ollama"}):
+                    with patch("app.main.assess_ticket", side_effect=AssertionError("Provider must not be called")):
+                        status, _ = await self.request("POST", path + "/analyze")
+                self.assertEqual(status, 303)
+                self.assertEqual(dict(database.get_assessment(ticket_id)), original)
+                self.assertEqual(dict(database.get_review(original["id"])), review)
+
+    async def test_invalid_provider_configuration_is_visible(self):
+        with patch.dict(os.environ, {"AI_PROVIDER": "typo"}):
+            status, html = await self.request("POST", self.path + "/analyze")
+        self.assertEqual(status, 503)
+        self.assertIn("AI_PROVIDER", html)
+        self.assertIn("No recommendation was saved.", html)
+        self.assertIsNone(database.get_assessment(self.ticket_id))
 
 
 if __name__ == "__main__":
