@@ -20,7 +20,7 @@ from urllib.request import ProxyHandler, Request, build_opener
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from app.assessment_policy import build_system_prompt
-from app.assessment_schema import AIAssessment, Category, Priority
+from app.assessment_schema import AIAssessment, CATEGORIES, PRIORITIES, Category, Priority
 from app.mock_assessment import TEAMS
 
 EVALUATION_DIR = Path(__file__).resolve().parent
@@ -170,32 +170,83 @@ def evaluate_ticket(model: str, ticket: EvaluationTicket, system_prompt: str, ti
     return score_response(model, ticket, raw_response, elapsed, error)
 
 
+def accuracy_breakdown(results: list[EvaluationResult], expected_field: str, correct_field: str, labels: tuple) -> dict:
+    """Group by expected labels so wrong or missing predictions stay in the denominator."""
+    breakdown = {}
+    for label in labels:
+        rows = [row for row in results if getattr(row, expected_field) == label]
+        correct = sum(getattr(row, correct_field) for row in rows)
+        breakdown[label] = {
+            "total": len(rows),
+            "correct": correct,
+            "incorrect": len(rows) - correct,
+            "accuracy": correct / len(rows) if rows else None,
+        }
+    return breakdown
+
+
 def summarize(results: list[EvaluationResult]) -> dict:
     count = len(results)
     # A failed connection is not a fast model response. Invalid completed responses
     # still have a response latency and remain in this timing sample.
     latencies = [row.latency_seconds for row in results if row.response_received]
+    category_correct = sum(row.category_correct for row in results)
+    priority_correct = sum(row.priority_correct for row in results)
+    routing_correct = sum(row.team_correct for row in results)
     return {
         "attempts": count,
         "responses": len(latencies),
-        "category_accuracy": sum(row.category_correct for row in results) / count if count else 0.0,
-        "priority_accuracy": sum(row.priority_correct for row in results) / count if count else 0.0,
-        "routing_accuracy": sum(row.team_correct for row in results) / count if count else 0.0,
+        "category_correct": category_correct,
+        "category_incorrect": count - category_correct,
+        "priority_correct": priority_correct,
+        "priority_incorrect": count - priority_correct,
+        "routing_correct": routing_correct,
+        "routing_incorrect": count - routing_correct,
+        "category_accuracy": category_correct / count if count else 0.0,
+        "priority_accuracy": priority_correct / count if count else 0.0,
+        "routing_accuracy": routing_correct / count if count else 0.0,
         "valid_output_rate": sum(row.schema_valid for row in results) / count if count else 0.0,
         "average_latency": statistics.mean(latencies) if latencies else None,
         "median_latency": statistics.median(latencies) if latencies else None,
+        "per_category": accuracy_breakdown(results, "expected_category", "category_correct", CATEGORIES),
+        "per_priority": accuracy_breakdown(results, "expected_priority", "priority_correct", PRIORITIES),
+        "misclassified_tickets": [
+            row for row in results if not (row.category_correct and row.priority_correct and row.team_correct)
+        ],
     }
 
 
 def print_summary(model: str, results: list[EvaluationResult]):
     summary = summarize(results)
     print(f"\n{model}: {summary['attempts']} attempts, {summary['responses']} completed HTTP responses")
+    for label, key in (("Category", "category"), ("Priority", "priority"), ("Routing", "routing")):
+        print(f"  {label} decisions: {summary[key + '_correct']} correct, {summary[key + '_incorrect']} incorrect")
     for label, key in (("Category accuracy", "category_accuracy"), ("Priority accuracy", "priority_accuracy"),
                        ("Routing accuracy", "routing_accuracy"), ("Valid structured-output rate", "valid_output_rate")):
         print(f"  {label}: {summary[key]:.1%}")
     for label, key in (("Average response latency", "average_latency"), ("Median response latency", "median_latency")):
         value = summary[key]
         print(f"  {label}: {value:.3f} s" if value is not None else f"  {label}: N/A (no completed responses)")
+
+    for heading, key in (("Per-category accuracy (expected category)", "per_category"),
+                         ("Per-priority accuracy (expected priority)", "per_priority")):
+        print(f"\n  {heading}:")
+        for label, group in summary[key].items():
+            accuracy = f"{group['accuracy']:.1%}" if group["accuracy"] is not None else "N/A"
+            print(f"    {label}: {group['correct']}/{group['total']} correct, {group['incorrect']} incorrect ({accuracy})")
+
+    print("\n  Misclassified or failed tickets (category | priority | team):")
+    if not summary["misclassified_tickets"]:
+        print("    None")
+    for row in summary["misclassified_tickets"]:
+        print(f"    {row.ticket_id} [{row.status}]")
+        print(f"      Expected: {row.expected_category} | {row.expected_priority} | {row.expected_team}")
+        predicted = " | ".join(value or "(no prediction)" for value in (
+            row.predicted_category, row.predicted_priority, row.predicted_team
+        ))
+        print(f"      Predicted: {predicted}")
+        if not row.schema_valid:
+            print("      No accuracy credit: response was unavailable or failed schema validation.")
 
 
 def run_evaluation(models: list[str], tickets: list[EvaluationTicket], output: Path, timeout: float):

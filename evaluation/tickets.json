@@ -58,5 +58,245 @@
     "title": "Ransomware affecting multiple services",
     "description": "A confirmed ransomware incident has made multiple services unavailable across the entire company. Business operations are interrupted for all users.",
     "expected": {"category": "Security", "priority": "Critical", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T11",
+    "title": "Coverage check before a future desk move",
+    "description": "We are considering using the west meeting room as an office next quarter. Could someone check its Wi-Fi coverage when convenient? Nobody works there yet and the current office works normally.",
+    "expected": {"category": "Network", "priority": "Low", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T12",
+    "title": "A spare keyboard for next month's starter",
+    "description": "Please arrange a keyboard for a colleague joining in five weeks. The existing equipment is working and this is preparation for their arrival, with no immediate work affected.",
+    "expected": {"category": "Hardware", "priority": "Low", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T13",
+    "title": "Expense application takes several attempts to save",
+    "description": "My draft expenses sometimes disappear until I re-enter them in the application. The rest of my team can save normally. I can still submit after retrying and the monthly cutoff is two weeks away.",
+    "expected": {"category": "Software", "priority": "Medium", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T14",
+    "title": "Locked out of the staff directory",
+    "description": "My account no longer opens the staff directory, although colleagues can use theirs. I can ask reception for contact details and continue my normal tasks. There is no pressing commitment depending on access.",
+    "expected": {"category": "Account Access", "priority": "Medium", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T15",
+    "title": "Approval requests I did not initiate",
+    "description": "I have received three MFA approval prompts this morning without trying to log in. I rejected them. This looks suspicious and I need someone to check whether another person is trying to enter my account; no wider effect is known.",
+    "expected": {"category": "Security", "priority": "High", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T16",
+    "title": "Understanding the escalation process",
+    "description": "I am updating our starter notes for later in the year. Could you explain how to escalate an IT support request after the initial response? This is a general information request, with no active incident.",
+    "expected": {"category": "Other", "priority": "Low", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T17",
+    "title": "Remote guests cannot hear our workshop reliably",
+    "description": "The meeting-room internet connection drops every few minutes. A three-person client workshop starts in 45 minutes and its remote guests cannot participate this way. There is no other room or connection available; the rest of the office is working normally.",
+    "expected": {"category": "Network", "priority": "High", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T18",
+    "title": "Second display cuts out intermittently",
+    "description": "The monitor on my desk goes black a few times each afternoon. I have moved my work to the other display and can complete routine tasks at the usual pace. Nobody else has reported this and no delivery is at risk.",
+    "expected": {"category": "Hardware", "priority": "Medium", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T19",
+    "title": "Misaligned logo in the drawing application",
+    "description": "The application logo overlaps the welcome text on the start screen. Documents and tools behave normally. Please consider this cosmetic fix for a future update; it does not delay anyone's work.",
+    "expected": {"category": "Software", "priority": "Low", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T20",
+    "title": "Payroll approval access disappeared",
+    "description": "My payroll account has lost the permission to approve this month's payment file. Approval closes in 45 minutes and I am the designated approver. The other users can sign in, but nobody can approve in my place before the cutoff.",
+    "expected": {"category": "Account Access", "priority": "High", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T21",
+    "title": "Caller claiming to be our help desk",
+    "description": "An unexpected caller asked me to run a remote-control tool and read out an access code. I ended the call without doing either. The request seemed suspicious; please review it promptly. I do not know of anyone else receiving the call.",
+    "expected": {"category": "Security", "priority": "High", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T22",
+    "title": "Support callback did not happen",
+    "description": "The service desk marked my scheduled callback as completed, but nobody called. Please reopen the support appointment and arrange another slot. It concerns only my request, and I can continue working while we sort out the booking.",
+    "expected": {"category": "Other", "priority": "Medium", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T23",
+    "title": "Routine transfers are much slower from my desk",
+    "description": "My wired network connection now takes several minutes to copy small internal files, while the adjacent desks finish immediately. Transfers eventually complete and I can work on other tasks while they run. There is no time-sensitive delivery involved.",
+    "expected": {"category": "Network", "priority": "Medium", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T24",
+    "title": "Dispatch documents are stuck in the feeder",
+    "description": "My invoice printer jams on every sheet. I must print the customs documents for a customer shipment being collected in one hour, and there is no spare available before collection. Other dispatch work can continue, but this shipment cannot leave without them.",
+    "expected": {"category": "Hardware", "priority": "High", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T25",
+    "title": "Contract editor loses the final changes",
+    "description": "The document application closes whenever I save the final contract revision. I have already lost the edits twice. The signed copy is due to the customer this afternoon and there is no supported way to finish it elsewhere. My colleague's documents are unaffected.",
+    "expected": {"category": "Software", "priority": "High", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T26",
+    "title": "Access for a project starting next month",
+    "description": "Please add my account to the reference-library group before our research project begins in four weeks. I do not need that material for current assignments, so this can be scheduled with the normal planned requests.",
+    "expected": {"category": "Account Access", "priority": "Low", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T27",
+    "title": "Malware has stopped work in several departments",
+    "description": "Confirmed malware has made shared project records unreadable and disabled two internal services. Staff across purchasing, finance, and dispatch cannot carry out their normal work. The disruption is ongoing and affects multiple sites.",
+    "expected": {"category": "Security", "priority": "Critical", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T28",
+    "title": "Help-request guidance for a future induction",
+    "description": "Could you send the instructions for asking the service desk for help? I am preparing an induction pack for a session in six weeks. There is no current problem or urgent need for the information.",
+    "expected": {"category": "Other", "priority": "Low", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T29",
+    "title": "Offices have lost connectivity to operating services",
+    "description": "The network links between all three offices and our operating services have stopped carrying traffic. Order entry, dispatch, and customer support have all stopped across the business. Staff at every site are affected and there is no working alternate path.",
+    "expected": {"category": "Network", "priority": "Critical", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T30",
+    "title": "Shared server hardware has lost power",
+    "description": "The power units in the central server rack failed and the equipment will not start. All business departments have lost their operating systems and cannot process work. The spare power unit also failed, leaving company operations stopped.",
+    "expected": {"category": "Hardware", "priority": "Critical", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T31",
+    "title": "Order application rejects every transaction",
+    "description": "Since this morning's software update, the order application produces an error on every transaction at every branch. Sales cannot place orders and dispatch cannot release any shipment. The whole business is at a standstill with no alternative process.",
+    "expected": {"category": "Software", "priority": "Critical", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T32",
+    "title": "Central sign-in is rejecting everyone",
+    "description": "The central login service rejects all staff credentials across every office. Staff cannot enter the order, payroll, or customer-support systems, and those operations have stopped. The service owner confirms a widespread authentication failure rather than an individual password problem.",
+    "expected": {"category": "Account Access", "priority": "Critical", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T33",
+    "title": "Unexpected forwarding rule in my mailbox",
+    "description": "I found a rule forwarding customer correspondence to an unfamiliar external address. I did not create it, and the activity looks suspicious. Please investigate promptly; so far the rule has only been identified in my mailbox and there is no confirmed wider disruption.",
+    "expected": {"category": "Security", "priority": "High", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T34",
+    "title": "No duty contact for the imminent handover",
+    "description": "We must hand over customer support in 30 minutes, but the escalation roster has no named IT duty contact. Without someone accepting the handover, the next shift cannot begin its contracted coverage. Only this handover is affected; please resolve the ownership gap before the current shift leaves.",
+    "expected": {"category": "Other", "priority": "High", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T35",
+    "title": "Remote connection drops during routine filing",
+    "description": "My VPN disconnects when I leave it idle and I have to reconnect before filing the next document. The reconnection works each time. My teammates are unaffected, and this extra step is not stopping my work or threatening a commitment.",
+    "expected": {"category": "Network", "priority": "Medium", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T36",
+    "title": "Mouse for a desk that opens later",
+    "description": "Please include a mouse in the equipment order for a desk that will be used in two months. Nobody is waiting for it now and all occupied desks have working equipment. Delivery with the next routine order is fine.",
+    "expected": {"category": "Hardware", "priority": "Low", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T37",
+    "title": "Reusable report template will no longer open",
+    "description": "The reporting application gives me an error when I open my saved template. Other users' templates still work. I can create the routine internal report from a blank document, although that adds some manual work, and it is not needed until next week.",
+    "expected": {"category": "Software", "priority": "Medium", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T38",
+    "title": "Second factor for the optional training portal",
+    "description": "After replacing my token, MFA no longer lets my account into the optional training portal. I am the only person affected. My usual work access is fine and I have no course or certification deadline, but I would like normal access restored.",
+    "expected": {"category": "Account Access", "priority": "Medium", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T39",
+    "title": "Confirmed intrusion has damaged shared records",
+    "description": "The incident responders confirmed a breach: an intruder altered shared operational records and disabled several services used at every branch. Multiple departments cannot deliver customer work, and the affected services have been isolated while the damage is assessed.",
+    "expected": {"category": "Security", "priority": "Critical", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T40",
+    "title": "Desk-support visit assigned to the wrong person",
+    "description": "My routine IT support visit was assigned to a former colleague, so the technician did not attend my appointment. Please correct the assignment and reschedule the visit. This affects only my service request; normal work continues and no same-day delivery depends on it.",
+    "expected": {"category": "Other", "priority": "Medium", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T41",
+    "title": "Cannot reach the file for today's closing",
+    "description": "My VPN connection fails before I can reach the internal closing documents. I am due to present them to the client in one hour and have no other permitted connection from this location. Colleagues at the office can reach the documents normally, but I cannot complete my part without them.",
+    "expected": {"category": "Network", "priority": "High", "recommended_team": "Network Support"}
+  },
+  {
+    "id": "T42",
+    "title": "Several keys have stopped responding",
+    "description": "A few keys on my keyboard no longer register. I borrowed a spare and can do my usual work while this one is repaired. This is limited to my desk and does not affect a deadline.",
+    "expected": {"category": "Hardware", "priority": "Medium", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T43",
+    "title": "Final payroll export fails for the operator",
+    "description": "The payroll application raises an error when I export the payment file. The rest of the process is working, but I cannot complete the final submission and the bank cutoff is this afternoon. There is no manual export or other operator available before then.",
+    "expected": {"category": "Software", "priority": "High", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T44",
+    "title": "Lost permission to release a customer quotation",
+    "description": "My account's quotation-approval permission disappeared during a role change. A customer is waiting for the final quotation within the hour, and the other authorized approver is away until tomorrow. I can do other tasks, but this important commitment is blocked without access.",
+    "expected": {"category": "Account Access", "priority": "High", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T45",
+    "title": "Unattended USB device near reception",
+    "description": "I found an unfamiliar USB drive labelled with our department name on the reception desk. Nobody here recognizes it. I have not connected it to anything; please review this suspicious device promptly before anyone uses it. No affected systems are known.",
+    "expected": {"category": "Security", "priority": "High", "recommended_team": "IT Security"}
+  },
+  {
+    "id": "T46",
+    "title": "Small correction to the support catalogue",
+    "description": "The printed IT service catalogue uses an old room name for the help desk. The directions are still clear and visitors are finding the desk. Please update the wording when the guide is next revised; this is a cosmetic documentation correction.",
+    "expected": {"category": "Other", "priority": "Low", "recommended_team": "Service Desk"}
+  },
+  {
+    "id": "T47",
+    "title": "Design workstation will not power on",
+    "description": "My workstation hardware shows no lights or fan movement when I press the power button. I must finish the approved design drawings for a customer review in two hours and no spare workstation is available. Other designers can work normally, but my assigned drawings are blocked.",
+    "expected": {"category": "Hardware", "priority": "High", "recommended_team": "Hardware Support"}
+  },
+  {
+    "id": "T48",
+    "title": "An archived workbook refuses to open",
+    "description": "The spreadsheet application returns an error for one archived workbook on my profile. I need to check it for routine internal reconciliation, but can continue other tasks and nothing depends on this being resolved today. Current workbooks and other users are unaffected.",
+    "expected": {"category": "Software", "priority": "Medium", "recommended_team": "Software Support"}
+  },
+  {
+    "id": "T49",
+    "title": "Shift coordinator cannot sign in before opening",
+    "description": "My coordinator account was disabled by an incorrect leaving date. I need to log in to assign the morning customer appointments in 40 minutes; nobody else on this shift has that permission. The team is otherwise ready, but I cannot perform this essential opening task.",
+    "expected": {"category": "Account Access", "priority": "High", "recommended_team": "Identity and Access"}
+  },
+  {
+    "id": "T50",
+    "title": "IT induction marked complete before it took place",
+    "description": "My IT induction session was recorded as complete even though it never took place. Please reopen the booking so I can finish the routine induction. I am the only person affected, can continue my assigned work, and have no deadline this week.",
+    "expected": {"category": "Other", "priority": "Medium", "recommended_team": "Service Desk"}
   }
 ]

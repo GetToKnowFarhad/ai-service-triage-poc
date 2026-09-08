@@ -115,6 +115,7 @@ app/
 tests/
     test_assessment.py
     test_evaluation.py
+    test_evaluation_reporting.py
     test_ollama_provider.py
     test_shared_policy.py
     test_workflow.py
@@ -145,13 +146,14 @@ README.md
 - `app/templates/ticket_detail.html`: Displays the ticket, Analyze ticket action, original recommendation, review forms, saved final human decision, and assessment errors. The recommendation description now works for either provider. Jinja2 escapes submitted values so input appears as text.
 - `app/static/style.css`: Styles pages and form controls, including review dropdowns and sections. Preserves line breaks in submitted text.
 - `tests/test_assessment.py`: Tests the assessment contract, mock return type, and safe rejection of invalid provider output. Provider settings are isolated from the developer's environment.
-- `tests/test_evaluation.py`: Tests scoring, latency calculations, request settings, dataset coverage, error handling, and a complete CSV export with mocked HTTP responses; Ollama is not needed.
+- `tests/test_evaluation.py`: Tests scoring, latency calculations, request settings, the 50-ticket dataset's integrity and coverage, error handling, and a complete 100-row CSV export with mocked HTTP responses; Ollama is not needed.
+- `tests/test_evaluation_reporting.py`: Tests correct/incorrect totals, breakdowns by expected category and priority, missing groups, and expected-versus-predicted reporting for misclassified or failed tickets.
 - `tests/test_ollama_provider.py`: Tests Ollama request settings, validated responses, configuration, provider selection, and failures without mock fallback using mocked HTTP responses; no model or Ollama server is required.
 - `tests/test_shared_policy.py`: Checks that the shared prompt preserves benchmark behavior and that application and benchmark use the same policy.
 - `tests/test_workflow.py`: Tests priority rules and the full workflow with isolated environment settings and a temporary database. Also checks visible assessment failures, retry behavior, and preservation of saved recommendations and human decisions.
 - `evaluation/__init__.py`: Marks the standalone evaluation directory as a Python package so the benchmark can run with `python -m`.
-- `evaluation/benchmark.py`: Calls the local Ollama chat API, validates responses, calculates results, prints summaries, and writes a CSV. Only prompt construction now comes from the shared policy helper; benchmark requests, scoring, and output behavior are unchanged. It does not import routes, call the application service, or access SQLite.
-- `evaluation/tickets.json`: Ten hand-authored synthetic tickets with predefined category, priority, and team labels. The benchmark does not calculate these labels from model predictions or send them to the models.
+- `evaluation/benchmark.py`: Calls the local Ollama chat API, validates responses, and writes the existing detailed CSV. Reports overall rates, correct/incorrect totals, category/priority breakdowns, and misclassified ticket details. The request settings, shared policy, scoring rules, and CSV columns are unchanged. It does not import routes, call the application service, or access SQLite.
+- `evaluation/tickets.json`: Fifty hand-authored synthetic tickets with predefined category, priority, and team labels. T01-T10 are retained; T11-T50 expand the coverage. Expected labels follow the business policy and are never generated from predictions or sent to the models.
 - `requirements.txt`: Lists FastAPI, Uvicorn, Jinja2, `python-multipart`, and Pydantic 2. Pydantic is already installed through FastAPI; it is now declared directly because the application imports it for assessment validation.
 - `tickets.db`: The local database, generated automatically; stores tickets, assessments, and reviews between server restarts.
 - `.gitignore`: Keeps the virtual environment, Python caches, and local database files out of Git.
@@ -410,8 +412,8 @@ python3 -m venv .venv
 .venv/bin/python -m evaluation.benchmark
 ```
 
-The default run makes 20 sequential requests: 10 tickets for `qwen3:1.7b`,
-then the same 10 for `gemma3:1b`. It prints progress and one console summary per
+The default run makes 100 sequential requests: 50 tickets for `qwen3:1.7b`,
+then the same 50 for `gemma3:1b`. It prints progress and one console summary per
 model, then saves `evaluation/results/ollama_<UTC timestamp>.csv`.
 
 Optional arguments let you select either model, reverse their order, specify
@@ -450,25 +452,40 @@ answers stay in the dataset and are used only for scoring. The benchmark and
 application provider share the same prompt-building helper; moving the policy
 did not change its contents or the benchmark's requests and scoring.
 
-All tickets are invented and contain no real organizational/customer data:
+All 50 tickets are invented and contain no real organizational/customer data.
+Each has an explicit expected category, priority, and recommended team in
+`evaluation/tickets.json`. The original T01-T10 remain unchanged for continuity.
+The added tickets include natural descriptions, plausible workarounds, and
+overlapping symptoms that require attention to the reported cause and impact.
 
-| ID | Synthetic scenario | Expected category | Expected priority | Expected team |
-| --- | --- | --- | --- | --- |
-| T01 | Software installation for next month | Software | Low | Software Support |
-| T02 | General service-desk information | Other | Low | Service Desk |
-| T03 | Broken printer with a usable spare | Hardware | Medium | Hardware Support |
-| T04 | Optional learning account locked out | Account Access | Medium | Identity and Access |
-| T05 | Intermittent Wi-Fi with a working wired alternative | Network | Medium | Network Support |
-| T06 | Wi-Fi drops before an imminent client meeting | Network | High | Network Support |
-| T07 | Software crash blocking a report due today | Software | High | Software Support |
-| T08 | Suspicious phishing email to one user | Security | High | IT Security |
-| T09 | Company-wide network outage | Network | Critical | Network Support |
-| T10 | Ransomware affecting multiple services | Security | Critical | IT Security |
+Coverage spans all six categories and all four priorities. Low cases include
+planned/nonurgent requests; Medium cases include ordinary single-user incidents;
+High cases include blocked work, several business deadlines, and suspicious
+events. Critical cases describe widespread disruption or severe incidents
+affecting multiple services/users, rather than a single user's urgent deadline.
+
+| Expected category | Low | Medium | High | Critical | Total |
+| --- | --- | --- | --- | --- | --- |
+| Network | 1 | 3 | 3 | 2 | 9 |
+| Hardware | 2 | 3 | 2 | 1 | 8 |
+| Software | 2 | 3 | 3 | 1 | 9 |
+| Account Access | 1 | 3 | 3 | 1 | 8 |
+| Security | 0 | 0 | 5 | 3 | 8 |
+| Other | 4 | 3 | 1 | 0 | 8 |
+| Total | 10 | 15 | 17 | 8 | 50 |
+
+These labels are authored against the reusable business policy. They are not
+required to match the limited mock keyword classifier on every naturally worded
+ticket. Tests check dataset integrity and coverage without deriving expected
+answers from the mock. No per-ticket instructions or examples were added to
+the shared prompt.
 
 ### Reading the results
 
-The console reports category accuracy, priority accuracy, routing accuracy,
-valid structured-output rate, and average/median response latency for each model.
+For each model, the console reports correct/incorrect category, priority, and
+routing totals, their existing accuracy rates, valid structured-output rate,
+and average/median response latency. It also prints category/priority breakdowns
+and the IDs of misclassified or failed tickets with expected/predicted values.
 
 - Accuracy is exact, case-sensitive matching: correct predictions divided by
   **all attempted tickets** for that model. Routing accuracy means an exact
@@ -476,6 +493,16 @@ valid structured-output rate, and average/median response latency for each model
 - Invalid output and failed requests receive no category, priority, or routing
   credit, even if a partial response contains a correct label. The validation
   rate also uses all attempts as its denominator.
+- Per-category accuracy groups tickets by their **expected category** and measures
+  correct category decisions within that group. Per-priority accuracy groups by
+  **expected priority** and measures correct priority decisions. Wrong or missing
+  predictions stay in the expected group's denominator. Each group shows correct,
+  total, and incorrect counts; a group absent from a custom dataset shows N/A.
+- The misclassified/failed list includes any ticket with an incorrect category,
+  priority, or team decision, including failed requests and invalid structured
+  output. It shows all three expected/predicted fields, identifies unavailable
+  predictions, and flags invalid output that received no accuracy credit.
+  If every decision is correct, the list shows None.
 - Each CSV row records model and ticket ID, expected/predicted category,
   priority, and team, validation and correctness flags, and elapsed seconds.
   It also includes request status, whether a completed HTTP response arrived,
@@ -505,9 +532,10 @@ load. Record its CPU, RAM, GPU (if any), Ollama version, model IDs from
 `ollama list`, and whether models were already loaded alongside the CSV. Repeat
 with reversed model order to check loading/resource effects. Temperature zero
 reduces sampling variation but is not a guarantee of identical results across
-hardware or software versions. This 10-ticket set is an initial check, not a
-statistical ranking; expand the synthetic cases when reassessing the
-provisional Qwen3 selection.
+hardware or software versions. The 50-ticket set gives broader coverage but
+does not establish production accuracy. Compare results on the same dataset
+revision; a prior 10-ticket aggregate is not directly comparable to a new
+50-ticket aggregate. The preserved IDs allow comparison on the original subset.
 
 ## Tests
 
