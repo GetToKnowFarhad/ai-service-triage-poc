@@ -4,159 +4,148 @@
 | --- | --- |
 | System / package | AI Service Triage PoC / UAT 1.0 |
 | Prepared | 2026-09-08 |
-| Manual execution status | NOT EXECUTED |
-| Acceptance status | Pending manual Dell execution and business-owner review |
+| Results revision | 2 — manually executed results recorded from the user's report |
+| Manual execution status | **COMPLETE — 10 scenarios reported PASS** |
+| Acceptance status | All ten scenario dispositions recorded as PASS; separate named/dated sign-off not supplied |
 | Procedures | [UAT plan](uat-plan.md) |
 | Requirements | [UAT traceability](uat-traceability.md) |
 
-This register contains no claimed manual passes. The package was prepared from the current implementation and automated tests. No browser UAT, live Qwen3 request, Ollama outage/restoration, or Dell restart was performed during document preparation. Automated evidence below is supporting engineering evidence and does not replace user acceptance testing.
+The user reports that all ten scenarios were manually executed on the Dell Ubuntu server using the live application and Qwen3 1.7B through Ollama, with a deliberate switch to mock for UAT-10. The observations and PASS dispositions below are recorded from that manual execution report. They are not claims that the documentation editor independently operated the Dell or inspected screenshots.
+
+The original [plan](uat-plan.md), requirements, acceptance criteria, and expected-outcome column remain unchanged. Its initial result placeholders represent the pre-execution baseline; this register is the authoritative current result record. The supplied observations do not enumerate every original subcheck. Execution differences and evidence limitations are retained explicitly below without inventing additional results or changing the user's final scenario dispositions. Model-accuracy limitations remain separate from UAT defects.
 
 ## 1. Manual run record
 
-Complete these fields before executing the plan. Record each subsequent run separately or retain an archived copy with its run ID.
+The following environment details are taken from the user's report. Unprovided metadata remains identified as such; the original document preparation date is not the manual execution date.
 
 | Field | Actual value |
 | --- | --- |
-| Run ID | NOT RECORDED |
-| Tester / analyst | NOT ASSIGNED |
-| Business owner / acceptance authority | NOT ASSIGNED |
-| Environment operator | NOT ASSIGNED |
-| Start / finish, with time zone | NOT EXECUTED |
-| Dell host identifier and OS/version | NOT RECORDED |
-| CPU / RAM / GPU, if present | NOT RECORDED |
-| Project directory / absolute `tickets.db` path | NOT RECORDED |
-| Git revision / working-tree changes on Dell | NOT RECORDED |
-| Python / browser versions | NOT RECORDED |
-| Ollama version / `qwen3:1.7b` model ID | NOT RECORDED |
-| Actual `AI_PROVIDER`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT` | NOT RECORDED; planned starting values: ollama, qwen3:1.7b, 120 |
-| Ollama start/stop controls | NOT RECORDED |
-| Evidence directory | Planned: `docs/evidence/<RUN-ID>/`; not yet populated |
-| End-state configuration and service readiness | NOT EXECUTED |
+| Run ID | Not supplied; `manual-dell-uat` is a documentation evidence-folder label, not an asserted execution ID |
+| Tester / analyst | Manual results supplied by the user; tester name not supplied |
+| Business owner / acceptance authority | Separate identity and formal signature not supplied |
+| Environment operator | Service and application operations reported by the user; operator name not supplied |
+| Start / finish, with time zone | Execution completed; dates, times, and time zone not supplied |
+| Dell host identifier and OS/version | Dell Ubuntu server; hostname and Ubuntu version not supplied |
+| CPU / RAM / GPU, if present | Not supplied |
+| Project directory / absolute `tickets.db` path | Not supplied |
+| Git revision / working-tree changes on Dell | Not supplied; do not substitute the development test revision |
+| Python / browser versions | Not supplied for the Dell run |
+| Ollama version / `qwen3:1.7b` model ID | Qwen3 1.7B through live Ollama confirmed by the user; Ollama version and model digest not supplied |
+| Actual `AI_PROVIDER`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT` | Provider `ollama`, then `mock` for UAT-10; Qwen3 1.7B used for real assessments. Exact model environment value and timeout not supplied |
+| Ollama start/stop controls | Ollama stopped for UAT-08 and restarted for UAT-09; exact commands not supplied |
+| Evidence directory | Placeholder: `docs/evidence/manual-dell-uat/`; screenshot files are not present in the repository |
+| End-state configuration and service readiness | Last reported application state: `AI_PROVIDER=mock` after application restart for UAT-10. Ollama was restored for UAT-09; no later readiness check or return to the Ollama provider was reported |
 
 ### Fixture ledger
 
-| Fixture | Actual ticket ID / detail URL | Assessment ID | Review ID | Purpose |
+| Reported ticket | Detail URL | Assessment ID | Review ID | Observed use |
 | --- | --- | --- | --- | --- |
-| A | NOT CREATED | NOT CREATED | NOT CREATED | Real recommendation, unchanged approval, restart, preservation |
-| B | NOT CREATED | NOT CREATED | NOT CREATED | Real recommendation, override, original comparison, restart |
-| C | NOT CREATED | NOT CREATED | NOT CREATED | Failure then retry of the same ticket |
-| D | NOT CREATED | NOT CREATED | Not planned | Mock recommendation retained after selecting Ollama |
+| Ticket #3 | `/tickets/3` | Not supplied; original recommendation reported preserved | Not supplied; override reported saved | UAT-01, UAT-05, UAT-06: exact submitted title/description persisted; original Network / Medium / Network Support; final Hardware / Medium / Hardware Support |
+| Ticket #4 | `/tickets/4` | Not supplied; recommendation reported saved | Not supplied; unchanged approval reported saved | UAT-04, UAT-07: AI and human values matched and all three records survived application restart |
+| Ticket #5 | `/tickets/5` | Not supplied; absent after failure, created on retry | Review state not supplied | UAT-08, UAT-09, UAT-10: failed real request, successful Security / High / IT Security retry, preserved after switching to mock |
 
-These are placeholders for tickets the tester will create, not statements about records already present in a development database.
+These are actual ticket IDs from the report. They are not retroactively assigned the plan's A/B/C/D fixtures or their invented input text. The literal titles/descriptions, internal row IDs, and UAT-03-specific ticket ID were not supplied. Exact title/description matching for Ticket #3 is the user's reported observation; no text has been reconstructed.
 
 ## 2. Scenario results register
 
-Objectives, preconditions, synthetic data, exact steps, expected results, requirement references, and planned evidence are defined for each linked case in the plan. Enter observed results here, including actual values and any failed step. Replace planned evidence references only when the corresponding artifacts exist.
+Objectives, preconditions, planned data, exact steps, expected results, and requirement references remain in each linked plan case. The expected-outcome column below is preserved verbatim from the pre-execution register. The actual-result column records only supplied observations. Every screenshot filename is a descriptive **placeholder**, relative to `docs/evidence/manual-dell-uat/`; no image file is claimed to exist or to have been reviewed.
 
 | UAT ID / procedure | Expected outcome | Actual result | PASS / FAIL / NOT EXECUTED | Evidence / screenshot reference | Notes |
 | --- | --- | --- | --- | --- | --- |
-| [UAT-01](uat-plan.md#uat-01--submit-a-valid-service-request) | Valid request saved once; generated ID, fields, list entry, and detail page available | NOT EXECUTED — no manual submission observed | NOT EXECUTED | None captured; planned `UAT-01-*` | Record generated A ID; no dedicated `/submit` test is claimed from the automated suite |
-| [UAT-02](uat-plan.md#uat-02--reject-empty-and-whitespace-only-fields) | Browser and server reject required-field failures; no row saved | NOT EXECUTED — browser check and six input pairs pending | NOT EXECUTED | None captured; planned `UAT-02-*` | Complete every subcase below |
-| [UAT-03](uat-plan.md#uat-03--generate-a-structured-recommendation-with-qwen3-17b) | Real Qwen3 produces a validated, policy-consistent five-field recommendation; human review pending | NOT EXECUTED — no live Dell/Ollama generation observed | NOT EXECUTED | None captured; planned `UAT-03-*` | Capture provider/model provenance separately from database rows |
-| [UAT-04](uat-plan.md#uat-04--approve-the-recommendation-unchanged) | Approval copies original values into a separate review | NOT EXECUTED — analyst approval pending | NOT EXECUTED | None captured; planned `UAT-04-*` | Depends on UAT-03 |
-| [UAT-05](uat-plan.md#uat-05--modify-category-priority-and-team) | All three analyst edits are saved as a modified final decision | NOT EXECUTED — analyst override pending | NOT EXECUTED | None captured; planned `UAT-05-*` | Record any test-value substitution and original classification discrepancy |
-| [UAT-06](uat-plan.md#uat-06--preserve-the-original-after-human-override) | Every original field, ID, and timestamp is unchanged; review is separately linked | NOT EXECUTED — before/after comparison pending | NOT EXECUTED | None captured; planned `UAT-06-*` plus UAT-05 baseline | Depends on UAT-05 evidence |
-| [UAT-07](uat-plan.md#uat-07--persist-tickets-and-reviews-after-restart) | A/B records survive application restart and Dell reboot unchanged | NOT EXECUTED — both live restart phases pending | NOT EXECUTED | None captured; planned `UAT-07-*` | Automated lifespan re-entry is not a Dell restart |
-| [UAT-08](uat-plan.md#uat-08--report-unavailable-ollama-without-saving-a-recommendation) | Useful HTTP 503 error; C retained; no recommendation/review or fallback | NOT EXECUTED — live outage has not been induced | NOT EXECUTED | None captured; planned `UAT-08-*` | Preserve failed C for retry |
-| [UAT-09](uat-plan.md#uat-09--retry-the-same-ticket-after-ollama-is-restored) | Restored real provider assesses the same C once; ticket unchanged and review pending | NOT EXECUTED — live recovery/retry pending | NOT EXECUTED | None captured; planned `UAT-09-*` | Failure and success in separate unit tests do not prove this live sequence |
-| [UAT-10](uat-plan.md#uat-10--preserve-saved-recommendations-across-repeats-and-provider-changes) | Repeated requests and provider switches preserve real and mock originals and existing review | NOT EXECUTED — live repeated requests and switches pending | NOT EXECUTED | None captured; planned `UAT-10-*` | Include the unavailable-service check and restore the end state |
+| [UAT-01](uat-plan.md#uat-01--submit-a-valid-service-request) | Valid request saved once; generated ID, fields, list entry, and detail page available | Valid submission created and persisted Ticket #3 with the exact submitted title and description. | **PASS** | Placeholder: `UAT-01-ticket-3-submission.png` | User-reported manual result; literal input text and individual list/detail observations not supplied |
+| [UAT-02](uat-plan.md#uat-02--reject-empty-and-whitespace-only-fields) | Browser and server reject required-field failures; no row saved | Whitespace-only title/description was rejected with a visible validation message, and no ticket was created. | **PASS** | Placeholder: `UAT-02-whitespace-validation-no-ticket.png` | Individual empty-input/browser subchecks and observed HTTP status not enumerated in the report |
+| [UAT-03](uat-plan.md#uat-03--generate-a-structured-recommendation-with-qwen3-17b) | Real Qwen3 produces a validated, policy-consistent five-field recommendation; human review pending | Live Qwen3 1.7B generated a valid structured assessment through Ollama in the application. | **PASS** | Placeholder: `UAT-03-qwen3-structured-assessment.png` | Ticket ID, full field values, raw response, model digest, and request logs not supplied for this case |
+| [UAT-04](uat-plan.md#uat-04--approve-the-recommendation-unchanged) | Approval copies original values into a separate review | Analyst approved Ticket #4 unchanged; the AI recommendation and final human decision matched. | **PASS** | Placeholder: `UAT-04-ticket-4-approved-unchanged.png` | Exact matching values and internal record IDs not supplied |
+| [UAT-05](uat-plan.md#uat-05--modify-category-priority-and-team) | All three analyst edits are saved as a modified final decision | Ticket #3 changed from Network / Medium / Network Support to Hardware / Medium / Hardware Support. | **PASS** | Placeholder: `UAT-05-ticket-3-human-override.png` | Category and team changed; priority remained Medium. The report does not demonstrate a priority change; the original three-field expectation is retained |
+| [UAT-06](uat-plan.md#uat-06--preserve-the-original-after-human-override) | Every original field, ID, and timestamp is unchanged; review is separately linked | Ticket #3 preserved its original Network / Medium / Network Support AI recommendation after the human override. | **PASS** | Placeholder: `UAT-06-ticket-3-original-and-final.png` | Full before/after row snapshots, IDs, timestamps, summary, and flag values not supplied |
+| [UAT-07](uat-plan.md#uat-07--persist-tickets-and-reviews-after-restart) | A/B records survive application restart and Dell reboot unchanged | Ticket #4, its AI recommendation, and its human review persisted after application restart. | **PASS** | Placeholder: `UAT-07-ticket-4-after-application-restart.png` | Application restart is confirmed by the report; an Ubuntu/Dell OS reboot or second reviewed ticket is not specifically reported |
+| [UAT-08](uat-plan.md#uat-08--report-unavailable-ollama-without-saving-a-recommendation) | Useful HTTP 503 error; C retained; no recommendation/review or fallback | With Ollama stopped, Ticket #5 displayed a visible unavailable-service error, showed no recommendation, and saved no assessment. | **PASS** | Placeholder: `UAT-08-ticket-5-ollama-unavailable.png` | No mock result substituted in the reported failure; exact observed HTTP code and database snapshot not supplied |
+| [UAT-09](uat-plan.md#uat-09--retry-the-same-ticket-after-ollama-is-restored) | Restored real provider assesses the same C once; ticket unchanged and review pending | After restarting Ollama, the same Ticket #5 successfully retried and generated Security / High / IT Security. | **PASS** | Placeholder: `UAT-09-ticket-5-successful-security-retry.png` | Actual execution used Ticket #5; do not replace the plan's fixture C text or expected labels with this result |
+| [UAT-10](uat-plan.md#uat-10--preserve-saved-recommendations-across-repeats-and-provider-changes) | Repeated requests and provider switches preserve real and mock originals and existing review | After switching the configured provider from Ollama to mock and restarting the application, Ticket #5 retained Security / High / IT Security and was not regenerated or overwritten. | **PASS** | Placeholder: `UAT-10-ticket-5-preserved-after-mock-switch.png` | Report confirms Ollama-to-mock preservation; reverse switching, stale POST replay, and a fresh mock control are not specifically reported |
 
-### Required subcase observations
+### Execution coverage and evidence notes
 
-Subcases do not increase the ten-scenario total. The parent case can pass only when all its required checks are complete and meet expectations.
+The user's final PASS disposition is recorded for each of the ten scenarios. The plan's stricter subcase completion rules and expected outcomes have not been rewritten. The notes below distinguish what the supplied report establishes from details it does not establish; they are documentation/coverage limitations, not newly observed failures or additional scenarios. An unreported subcheck must not be represented as a separately verified PASS.
 
-| Parent / subcase | Actual observation | Status | Evidence |
-| --- | --- | --- | --- |
-| UAT-02 / browser required-field check | Pending | NOT EXECUTED | None |
-| UAT-02 / 01 empty title, valid description | Pending | NOT EXECUTED | None |
-| UAT-02 / 02 valid title, empty description | Pending | NOT EXECUTED | None |
-| UAT-02 / 03 both empty | Pending | NOT EXECUTED | None |
-| UAT-02 / 04 spaces-only title | Pending | NOT EXECUTED | None |
-| UAT-02 / 05 spaces-only description | Pending | NOT EXECUTED | None |
-| UAT-02 / 06 both spaces-only | Pending | NOT EXECUTED | None |
-| UAT-07 / application process restart | Pending | NOT EXECUTED | None |
-| UAT-07 / Dell reboot | Pending | NOT EXECUTED | None |
-| UAT-10 / repeat existing real recommendation with Ollama selected | Pending | NOT EXECUTED | None |
-| UAT-10 / existing real recommendation with mock selected | Pending | NOT EXECUTED | None |
-| UAT-10 / fresh mock control D | Pending | NOT EXECUTED | None |
-| UAT-10 / existing real A with Ollama selected but unavailable | Pending | NOT EXECUTED | None |
-| UAT-10 / existing mock D with Ollama selected but unavailable | Pending | NOT EXECUTED | None |
-| UAT-10 / restore recorded Ollama end state | Pending | NOT EXECUTED | None |
+| Scenario / planned coverage | Supplied execution evidence | Limit of the current record |
+| --- | --- | --- |
+| UAT-02 / browser check and six invalid-input pairs | Whitespace-only title/description rejected visibly, no ticket created | Pair-by-pair empty/whitespace outcomes and browser-vs-server checks not supplied |
+| UAT-03 / fixture-specific interpretation and full structured response | Valid structured assessment from live Qwen3 1.7B through Ollama | No fixture ID or exact response supplied; do not claim that the plan's specific classification was observed |
+| UAT-05 / change all three fields | Category and team changed on Ticket #3; Medium priority retained | Priority-edit subcheck is not demonstrated by the supplied values |
+| UAT-06 / every column, identity, and timestamp | Original recommendation reported preserved on Ticket #3 | No complete stored-row comparison supplied |
+| UAT-07 / application restart and Dell reboot for two reviewed tickets | Ticket #4 and both associated records persisted after application restart | OS reboot and the second reviewed-ticket comparison not specifically reported |
+| UAT-08 / failure HTTP code and storage evidence | Unavailable-service error, no recommendation, no assessment on Ticket #5 | No observed HTTP status, service log, or read-only snapshot attached |
+| UAT-09 / planned fixture C and same-ticket retry | Failed Ticket #5 successfully retried with Security / High / IT Security | Literal input was not supplied, so correspondence to the plan's fixture C cannot be established; its expected labels remain unchanged |
+| UAT-10 / repeated POSTs, both switch directions, unavailable-service checks, restored end state | Existing Ticket #5 result preserved after Ollama-to-mock switch and application restart | Reverse switch, explicit replay/no-call observation, fresh mock control, and restoration to Ollama not specifically reported |
 
-### Execution / retest entry template
+Attach the descriptive screenshot files when available. Read-only database snapshots and service logs may supplement them where available; screenshots alone do not prove all row counts, timestamps, JSON types, or absence of a provider call. The current actual results rely on the user's reported observations rather than an independent review of those artifacts.
 
-Append a completed entry for each attempt; retain earlier attempts if a defect is fixed. Do not overwrite failure history with a later pass.
+### Results history and future retests
 
-| Field | Entry to complete |
-| --- | --- |
-| Run ID / UAT ID / attempt number | Pending |
-| Tester / execution time and time zone | Pending |
-| Requirement / objective / preconditions | Reference linked plan case; record actual precondition checks |
-| Actual ticket IDs and test data | Pending; include any declared substitutions |
-| Step-by-step observations / actual result | Pending; include HTTP outcomes and compared field values where required |
-| Expected result met? | Pending; identify deviations by step |
-| PASS / FAIL / NOT EXECUTED | NOT EXECUTED |
-| Evidence / screenshot references | None captured |
-| Defect IDs / blocked dependencies / notes | Pending |
+The initial package recorded all ten scenarios as not yet executed. This revision records the subsequently supplied manual results: all ten PASS, with no reported failed attempt or UAT defect. The original plan and prior automated log are retained. No earlier manual failure has been erased or converted into a pass.
+
+For any future attempt, append its run/UAT ID, tester, date/time/time zone, actual input and ticket IDs, step observations, unchanged expected outcome, disposition, evidence references, defect links, and execution notes. Retain prior observations rather than overwrite the history. No new attempt is implied by this instruction.
 
 ## 3. Supporting automated test evidence
 
-The previously reported baseline was 68 passing unit tests. After creating this package, the complete suite was rerun in the development workspace and all 68 tests passed. This is supporting automated evidence, not manual UAT evidence.
+The original package's [68-test passing log](evidence/unit-tests.txt) is retained as historical supporting evidence. After updating the manual results and traceability, the full suite was rerun and all 68 tests passed. Automated tests remain separate from the user-reported live UAT results.
 
 | Item | Result |
 | --- | --- |
 | Command | `.\.venv\Scripts\python.exe -m unittest discover -s tests -v` |
-| Current run status | **PASS — exit code 0; full suite completed** |
-| Run time (UTC) | 2026-09-08 03:32:27–03:32:28; exact timestamps in the log |
+| Current run status | **PASS — exit code 0; full suite completed after the documentation update** |
+| Run time (UTC) | 2026-09-08 03:57:34–03:57:35; exact timestamps in the log, independent of the unprovided manual UAT execution date |
 | Test count / failures / errors / skipped | **68 / 0 / 0 / 0** |
 | Environment | Windows development workspace; Python 3.13.0; offline mocked HTTP and temporary test databases |
-| Detailed evidence | [Full unit-test output and execution metadata](evidence/unit-tests.txt) |
+| Detailed evidence | [Post-update full unit-test output and execution metadata](evidence/unit-tests-after-manual-uat.txt); the prior log is preserved |
 | Dell/Ollama calls | None required by this suite; live UAT remains separate |
 
 The [traceability matrix](uat-traceability.md#3-scenario-to-requirement-matrix) identifies relevant test methods and evidence limitations. The unit total counts discovered test methods, not each `subTest` input or each mocked model request. It is not the UAT scenario count.
 
 ## 4. Defect and retest register
 
-No product defect has been identified during package preparation. No manual UAT has run, so this is not evidence that the live system is defect-free. If a case cannot start because a prerequisite is missing, record the limitation and dependency; do not invent a product defect or PASS.
+The user reports no UAT failures or open UAT defects across the ten completed scenarios. **Open UAT defects: 0.** Evidence/coverage limitations and previously measured model-accuracy limitations are tracked separately below; they are not reclassified as UAT failures. This record does not claim the system is free of every possible defect outside the reported acceptance scenarios.
 
 | Defect ID | UAT ID / failed step | Observed vs expected / reproduction | Impact and severity | Evidence | Owner / status | Retest run / result |
 | --- | --- | --- | --- | --- | --- | --- |
-| None logged | Not applicable | Manual execution pending | Not assessed | None | Not assigned | Not executed |
+| None logged | Not applicable | No UAT defect reported in the manual results | Not applicable | User's execution report; screenshot placeholders above | 0 open UAT defects | No defect retest required by the reported results |
 
 For observed defects, use IDs such as `UAT-DEF-001`. Classify impact as blocking acceptance, materially impairing a scenario, or minor presentation/usability; record the reason. Any proposed change to policy, schema, architecture, model selection, or benchmark behavior requires separate scope consideration and is not an automatic UAT fix.
 
 ## 5. Final UAT summary
 
-This is the current package-level summary and must be updated after manual execution. Counts are for the ten scenarios only.
+These final totals reflect the user's ten manual scenario dispositions. Evidence notes and unenumerated planned subchecks are not additional scenarios and do not change these totals.
 
 | Measure | Current result |
 | --- | --- |
 | Total scenarios | **10** |
-| Passed | **0** |
+| Passed | **10** |
 | Failed | **0** |
-| Not executed | **10** |
-| Defects found | **0 logged during preparation; manual findings unknown** |
-| Open limitations | **L-01 through L-06 below remain open** |
-| Overall recommendation | **Proceed to controlled manual UAT on the Dell. Acceptance and portfolio claims of successful live UAT remain pending.** |
+| Not executed | **0** |
+| Defects found | **0 UAT defects reported** |
+| Open UAT defects | **0** |
+| Open limitations | Evidence/coverage and PoC/model limitations recorded separately as L-01 through L-06 |
+| Overall recommendation | **Accept the demonstrated PoC workflow on the basis of the user's reported 10/10 manual PASS results. Complete the evidence archive and retain the stated coverage/model limitations; this is not a production-readiness or model-accuracy certification.** |
 
 ### Open limitations
 
 | ID | Limitation / required follow-up |
 | --- | --- |
-| L-01 | No manual browser interaction or actual Dell/Ollama response has been observed for this package. Execute all ten cases and attach evidence before sign-off. |
-| L-02 | Application-process restart and Dell reboot remain untested manually. The unit test re-enters application lifespan using a temporary database; it does not restart the OS or a deployed process. |
-| L-03 | The suite has no dedicated `/submit` intake validation test, and mocked failure/success tests do not establish a real outage-restoration retry on the same ticket. UAT-01, UAT-02, and UAT-09 supply the required manual evidence. |
-| L-04 | Provider/model provenance and reviewer identity are not stored in the schema. Record launch settings, model ID, correlated service activity, and the tester externally. Authentication and a provenance-schema change are outside scope. |
-| L-05 | This small manual workflow package does not establish production model accuracy, capacity, a response-time service level, security certification, or disaster recovery. The existing 50-ticket benchmark remains a separate evaluation. |
-| L-06 | Final decisions are saved once; there is no edit-after-review or re-analysis history. Refreshing the ticket-submission confirmation POST can resubmit a request. Follow the planned navigation and use fresh fixtures for a new review attempt. These scope constraints are not reported here as newly discovered defects. |
+| L-01 | Screenshot files, raw responses, database snapshots, execution times, and detailed environment metadata were not supplied. Filenames are placeholders; the recorded observations are attributed to the user. Attach existing artifacts when available without inventing evidence. |
+| L-02 | The original plan includes broader subchecks than the supplied observations enumerate: notably a changed priority, a Dell OS reboot, and repeated/reverse provider-switch checks. See the execution coverage table. Requirements and expected outcomes remain unchanged; the report does not independently establish every planned subcheck. |
+| L-03 | The automated suite still has no dedicated `/submit` intake test or complete real-service outage/recovery sequence. Manual UAT-01/02 and UAT-08/09 now provide user-reported live observations; offline tests remain supporting evidence with their existing scope. |
+| L-04 | Provider/model provenance and reviewer identity are not stored in the schema. Exact model digest, tester identity, and signed/date-stamped acceptance were not supplied externally. These are evidence and PoC scope limits, not observed workflow defects. |
+| L-05 | Previously measured model-accuracy limitations remain model-evaluation limitations, **not UAT failures or open UAT defects**. No accuracy figures or benchmark outcomes are changed by this update. Workflow acceptance does not establish production accuracy, capacity, a response-time service level, security certification, or disaster recovery; analyst review remains necessary. |
+| L-06 | Existing PoC scope constraints remain: final decisions are saved once, there is no edit-after-review/re-analysis history, and refreshing the submission confirmation POST can resubmit a request. None was reported as a defect in this manual UAT run. |
 
 ### Acceptance decision
 
 | Field | Record |
 | --- | --- |
-| Business-owner decision | PENDING — not accepted through UAT yet |
-| Evidence and outstanding defects reviewed | NOT EXECUTED |
-| Accepted limitations / rationale | Pending business-owner decision |
-| Name / role / date | NOT SIGNED |
+| Scenario acceptance disposition | User-reported manual UAT complete: all ten scenarios PASS |
+| Formal business-owner sign-off | Separate named/dated approval not supplied; no signature is invented |
+| Evidence and outstanding defects reviewed | User's manual-result report recorded; 0 open UAT defects reported. Screenshot artifacts have not been supplied for independent review |
+| Limitations / rationale | Recorded separately above; successful workflow UAT does not remove model-accuracy or evidence-coverage limitations |
+| Name / role / date | Not supplied |
 
-Automated success alone must not change this decision to accepted. When manual execution is complete, reconcile the totals with the scenario register, assess any open defects, and record the authorized acceptance decision.
+The ten PASS dispositions come from the user's live manual execution report, not from the automated suite. Portfolio reporting should identify that source, retain the unchanged planned expectations and execution notes, and add descriptive screenshot evidence and any formal sign-off when available.

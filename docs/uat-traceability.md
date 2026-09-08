@@ -6,12 +6,15 @@
 | Prepared | 2026-09-08 |
 | Inspected application baseline | `2bc53ab164f8a021fc22340255b82525894c7e39` |
 | Plan / execution record | [UAT plan](uat-plan.md) / [UAT results](uat-results.md) |
+| Manual execution status | 10 scenarios reported PASS by the user; Dell Ubuntu, live application, Ollama / `qwen3:1.7b` |
 
 ## 1. Basis and interpretation
 
 No separate approved business-requirements, functional-requirements, non-functional-requirements, user-story, or acceptance-criteria documents were found in the inspected repository. The IDs in this document are **local traceability references reconstructed from the existing implementation, README, shared business policy, assessment contract, and the user's implemented-workflow requirements**. The user-story phrasing is a restatement of existing capabilities, not a claim that an approved story backlog already existed.
 
 These references introduce no new product scope, numerical performance target, model-selection decision, or acceptance result. The business owner should confirm that the restatements match the intended requirements during UAT review. Source coverage means the requirement can be traced to existing behavior; it does not mean a manual test passed.
+
+The manual statuses below are recorded from the user's completed Dell execution report. They are not independent re-execution by the documentation author. The original requirement restatements, acceptance criteria, mappings, and planned verification remain unchanged; differences between the detail reported and the wider planned checks are identified as evidence limitations in section 5.
 
 ### Source register
 
@@ -97,20 +100,20 @@ NFR-06 is supported by source inspection and automated regression evidence. It i
 
 ## 3. Scenario-to-requirement matrix
 
-Automated evidence IDs are defined in section 4. They indicate supporting checks, not manual acceptance status. All manual statuses are maintained in the results document and currently remain NOT EXECUTED.
+Automated evidence IDs are defined in section 4. They indicate supporting checks, not manual acceptance status. All ten scenarios were reported PASS following manual execution on the Dell Ubuntu server using the live application and Qwen3 1.7B through Ollama; UAT-10 also exercised a switch to mock. The [results document](uat-results.md) is the execution record, including the reported observations and descriptive screenshot placeholders. The planned verification column is retained without retrospective changes and does not imply that every detailed subcheck has accompanying evidence.
 
-| UAT ID | Business | Functional | Non-functional | User story | Acceptance criterion | Supporting automated evidence | Manual evidence still required |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| UAT-01 | BR-01 | FR-01, FR-02 | NFR-01, NFR-02 | US-01 | AC-01 | No dedicated intake test; source review only for `/submit` | Actual browser submission, confirmation, listing/detail, and stored row |
-| UAT-02 | BR-01 | FR-01 | NFR-01 | US-01 | AC-02 | No dedicated intake validation test; review validation tests cover a different form | Browser-required behavior, all six server pairs, unchanged counts |
-| UAT-03 | BR-02, BR-03 | FR-03, FR-04 | NFR-01, NFR-05; NFR-06 supporting only | US-02 | AC-03 | AE-01, AE-02, AE-03, AE-09 | Real Qwen3 call, provider/model provenance, visible fields and factual/policy review |
-| UAT-04 | BR-03, BR-04 | FR-05, FR-07 | NFR-01, NFR-04 | US-03, US-04 | AC-04 | AE-04 | Actual analyst click, both visible records, separate stored review |
-| UAT-05 | BR-03 | FR-06 | NFR-01, NFR-04 | US-03 | AC-05 | AE-05 | Actual dropdown/team edits, saved values, evidence before and after |
-| UAT-06 | BR-04 | FR-07 | NFR-02, NFR-04 | US-04 | AC-06 | AE-05, AE-06 | Complete original-row comparison and both displayed decisions |
-| UAT-07 | BR-01, BR-04 | FR-02, FR-07, FR-08 | NFR-02, NFR-04 | US-01, US-04 | AC-07 | AE-06, limited to lifespan re-entry | Real process restart and Dell reboot, same database, complete before/after rows |
-| UAT-08 | BR-02, BR-05 | FR-04, FR-09 | NFR-01, NFR-03, NFR-05 | US-05 | AC-08 | AE-02, AE-07 | Service outage, safe browser error, no saved recommendation or review |
-| UAT-09 | BR-05 | FR-03, FR-10 | NFR-02, NFR-03 | US-05 | AC-09 | AE-07 and AE-04/AE-05 cover failure and success separately | Restore service and retry the exact failed ticket through the browser |
-| UAT-10 | BR-04, BR-05 | FR-03, FR-07, FR-11 | NFR-02, NFR-04, NFR-05 | US-04, US-06 | AC-10 | AE-03, AE-08 | Real/mock provider switches, repeated POSTs, unchanged originals/reviews and no regeneration |
+| UAT ID | Business | Functional | Non-functional | User story | Acceptance criterion | Supporting automated evidence | Reported manual status | Planned manual verification (unchanged) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| UAT-01 | BR-01 | FR-01, FR-02 | NFR-01, NFR-02 | US-01 | AC-01 | No dedicated intake test; source review only for `/submit` | PASS | Actual browser submission, confirmation, listing/detail, and stored row |
+| UAT-02 | BR-01 | FR-01 | NFR-01 | US-01 | AC-02 | No dedicated intake validation test; review validation tests cover a different form | PASS | Browser-required behavior, all six server pairs, unchanged counts |
+| UAT-03 | BR-02, BR-03 | FR-03, FR-04 | NFR-01, NFR-05; NFR-06 supporting only | US-02 | AC-03 | AE-01, AE-02, AE-03, AE-09 | PASS | Real Qwen3 call, provider/model provenance, visible fields and factual/policy review |
+| UAT-04 | BR-03, BR-04 | FR-05, FR-07 | NFR-01, NFR-04 | US-03, US-04 | AC-04 | AE-04 | PASS | Actual analyst click, both visible records, separate stored review |
+| UAT-05 | BR-03 | FR-06 | NFR-01, NFR-04 | US-03 | AC-05 | AE-05 | PASS | Actual dropdown/team edits, saved values, evidence before and after |
+| UAT-06 | BR-04 | FR-07 | NFR-02, NFR-04 | US-04 | AC-06 | AE-05, AE-06 | PASS | Complete original-row comparison and both displayed decisions |
+| UAT-07 | BR-01, BR-04 | FR-02, FR-07, FR-08 | NFR-02, NFR-04 | US-01, US-04 | AC-07 | AE-06, limited to lifespan re-entry | PASS | Real process restart and Dell reboot, same database, complete before/after rows |
+| UAT-08 | BR-02, BR-05 | FR-04, FR-09 | NFR-01, NFR-03, NFR-05 | US-05 | AC-08 | AE-02, AE-07 | PASS | Service outage, safe browser error, no saved recommendation or review |
+| UAT-09 | BR-05 | FR-03, FR-10 | NFR-02, NFR-03 | US-05 | AC-09 | AE-07 and AE-04/AE-05 cover failure and success separately | PASS | Restore service and retry the exact failed ticket through the browser |
+| UAT-10 | BR-04, BR-05 | FR-03, FR-07, FR-11 | NFR-02, NFR-04, NFR-05 | US-04, US-06 | AC-10 | AE-03, AE-08 | PASS | Real/mock provider switches, repeated POSTs, unchanged originals/reviews and no regeneration |
 
 ## 4. Supporting automated evidence catalogue
 
@@ -125,15 +128,44 @@ All named methods already exist. Read the exact current run count, outcome, and 
 | AE-05 | [test_workflow.py](../tests/test_workflow.py), `WorkflowTests.test_modify_preserves_original_and_survives_restart`, `test_all_allowed_choices_and_unchanged_edit`, `test_review_validation_and_missing_tickets`, `test_ollama_success_preserves_original_through_approval_or_override` | Separate override storage, allowed review choices, immutable originals, escaped output. These do not test intake `/submit` validation. |
 | AE-06 | [test_workflow.py](../tests/test_workflow.py), `WorkflowTests.test_modify_preserves_original_and_survives_restart` | Ticket/assessment/review survival when application lifespan is exited and re-entered against the same temporary SQLite file. It is not a process restart, Dell reboot, or backup/restore test. |
 | AE-07 | [test_workflow.py](../tests/test_workflow.py), `WorkflowTests.test_ollama_failures_show_errors_without_saving_or_fallback`, `test_invalid_provider_configuration_is_visible` | Safe rendered errors, no assessment saved, Analyze still available, no fallback. Failure cases repeat on an unassessed fixture; a successful recovery on that same ticket is not executed by these methods. |
-| AE-08 | [test_workflow.py](../tests/test_workflow.py), `WorkflowTests.test_repeated_actions_keep_first_records`, `test_ollama_success_preserves_original_through_approval_or_override` | Duplicate route/storage protection and explicit assertion that a provider must not be called for an already-assessed ticket. Live service/configuration changes still require UAT-10. |
+| AE-08 | [test_workflow.py](../tests/test_workflow.py), `WorkflowTests.test_repeated_actions_keep_first_records`, `test_ollama_success_preserves_original_through_approval_or_override` | Duplicate route/storage protection and explicit assertion that a provider must not be called for an already-assessed ticket. UAT-10 reports preservation after a live Ollama-to-mock switch and application restart; replayed POSTs and the reverse switch were not specifically reported. |
 | AE-09 | [test_shared_policy.py](../tests/test_shared_policy.py), `SharedPolicyTests.test_policy_file_is_unchanged_after_move`, `test_shared_prompt_matches_original_benchmark`; [test_workflow.py](../tests/test_workflow.py), `MockAssessmentTests.test_client_meeting_example_is_network_high`, `test_priorities_follow_business_impact`, `test_higher_impact_overrides_low_priority_signals` | Shared policy/prompt continuity and deterministic mock priority behavior. Does not establish Qwen3's semantic correctness or benchmark accuracy on the Dell. |
 
 ## 5. Coverage boundaries and acceptance interpretation
 
 - All ten requested scenarios map to an existing functional requirement, business purpose, restated user story, acceptance criterion, and relevant quality constraint. The matrix does not assert exhaustive coverage of every feature or every possible input.
-- UAT-01/02 have a direct manual validation obligation; the 68-test baseline must not be described as containing dedicated ticket-intake tests that are absent from the suite.
-- The live schema scenario combines a real browser/provider request with existing automated evidence of strict validation. Raw JSON is not a UI feature, and database snapshots cannot reconstruct the original JSON types or prove model provenance.
-- The outage/restoration sequence and two restart phases must be observed in the target environment. Mocked HTTP and application lifespan re-entry are useful supporting checks with narrower scope.
+- UAT-01/02 now have user-reported manual PASS results. The 68-test baseline must not be described as containing dedicated ticket-intake tests that are absent from the suite.
+- UAT-03 reports a valid structured recommendation from live Qwen3 1.7B through Ollama. Existing offline tests support strict validation and request settings. Raw JSON, logs, individual field values, and a detailed policy review were not supplied with that result; they must not be reconstructed from the PASS status. Raw JSON is not a UI feature, and database snapshots cannot reconstruct the original JSON types or prove model provenance.
+- UAT-08/09 report an actual Ollama outage and restoration followed by a successful retry of the same Ticket #5. UAT-07 reports application restart persistence for Ticket #4, its assessment, and its review. A Dell operating-system reboot was not specifically reported. Mocked HTTP and application lifespan re-entry remain supporting checks with narrower scope.
 - Shared policy, request settings, schema constraints, and benchmark behavior are retained. No benchmark rerun, target accuracy, or performance threshold is required by this package.
-- The schema does not store model/provider provenance or analyst identity. The manual run's configuration, model ID, service logs, and tester record supply context outside the application.
-- Final acceptance remains pending until the scenario results and evidence have been reviewed by the business owner. Engineering test success is not business sign-off.
+- The schema does not store model/provider provenance or analyst identity. The user's report supplies the Dell Ubuntu / Ollama / Qwen3 1.7B environment context; execution dates, operator identity, configuration captures, and service logs were not supplied. Descriptive screenshot references in the results document are placeholders, not claims that image files are present or reviewed.
+- Previously measured model accuracy limitations remain separate from defects and do not change these reported UAT outcomes. This ten-scenario workflow UAT does not establish general model accuracy or production readiness.
+
+### Reported observations and evidence detail
+
+The following observations explain the PASS statuses without changing any expected outcome. Unreported subchecks remain evidence limitations; they are not recorded as new defects or as NOT EXECUTED scenarios.
+
+| UAT ID | Observation supplied by the manual tester | Detail not established by the supplied report |
+| --- | --- | --- |
+| UAT-01 | Ticket #3 was created and persisted with the exact submitted title and description. | The literal submitted strings, list-order checks, creation-time checks, and stored-row captures were not supplied. |
+| UAT-02 | Whitespace-only title/description was rejected with a visible validation message and no ticket was created. | Separate outcomes for every planned empty/whitespace input pair and browser-required behavior were not supplied. |
+| UAT-03 | Live Qwen3 1.7B generated a valid structured assessment through Ollama. | The original JSON response, full field-level observations, provider logs, and a detailed policy review were not supplied. |
+| UAT-04 | The analyst approved Ticket #4 unchanged; the AI recommendation and final human decision matched. | Exact field values and separate stored-row captures were not supplied. |
+| UAT-05 | Ticket #3 changed from Network / Medium / Network Support to Hardware / Medium / Hardware Support. | Priority remained Medium in this execution; an actual priority change was not reported. AC-05's planned all-three-field change remains unchanged. |
+| UAT-06 | Ticket #3 retained the original AI recommendation after the human override. | A complete comparison of every original field, identifier, timestamp, and relationship was not supplied. |
+| UAT-07 | Ticket #4, its AI recommendation, and its human review persisted after application restart. | A Dell operating-system reboot and complete before/after database snapshots were not specifically reported. AC-07 and the planned restart checks remain unchanged. |
+| UAT-08 | With Ollama stopped, Ticket #5 displayed an unavailable-service error, showed no recommendation, and saved no assessment. | Exact error text, HTTP status, and a separate review-count observation were not supplied. |
+| UAT-09 | After Ollama restarted, the same Ticket #5 successfully generated Security / High / IT Security on retry. | Complete before/after row counts and the remaining assessment fields were not supplied. |
+| UAT-10 | After switching Ollama to mock and restarting the application, Ticket #5 retained Security / High / IT Security without regeneration or overwrite. | Replayed stale POSTs, a reverse provider switch, full record comparisons, and a direct provider-call trace were not specifically reported. AC-10 and the wider planned checks remain unchanged. |
+
+### Final UAT summary
+
+| Measure | Reported result |
+| --- | --- |
+| Total scenarios | 10 |
+| Passed | 10 |
+| Failed | 0 |
+| Not executed | 0 |
+| Open UAT defects | 0 |
+
+The reported manual execution supports acceptance of the existing proof-of-concept workflow within this UAT scope, with the evidence detail and model accuracy limitations recorded separately. No UAT defects were reported. Formal signatures or independent evidence review are not implied; consult the [results document](uat-results.md) for the execution record and overall recommendation.
